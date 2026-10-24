@@ -58,3 +58,6 @@ footer{text-align:center;color:#727c89;font-size:.78rem;padding:22px;border-top:
 .currency-input{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:10px;background:#0b0d10;overflow:hidden}.currency-input:focus-within{outline:2px solid #ff6b0077;border-color:var(--orange)}.form-card .currency-input span{display:flex;align-items:center;padding:0 13px;background:var(--panel2);border-right:1px solid var(--line);font-weight:750;color:var(--orange)}.form-card .currency-input input{flex:1;border:0;border-radius:0;background:transparent;min-width:0}.form-card .currency-input input:focus{outline:none}
 
 .percent-input input{flex:1;min-width:0;border:0!important;border-radius:0!important;background:transparent!important}.form-card .percent-input span{border-right:0;border-left:1px solid var(--line);min-width:46px;justify-content:center}.percent-input input:focus{outline:none!important}
+
+/* Percentual encostado ao valor, como o prefixo R$ no preço. */
+.form-card .percent-input{display:inline-flex;width:max-content;max-width:100%;vertical-align:middle}.form-card .percent-input input{flex:0 1 auto;width:3ch;min-width:2ch;max-width:calc(100% - 30px);padding-left:12px;padding-right:2px}.form-card .percent-input span{min-width:0;padding:0 8px;border-left:0!important;background:transparent!important}

@@ -167,10 +167,12 @@ def create_app(test_config=None):
         try:
             product_count = db.execute("SELECT COUNT(*) FROM products").fetchone()[0]
             post_count = db.execute("SELECT COUNT(*) FROM posts").fetchone()[0]
+            admin_row = db.execute("SELECT is_admin FROM users WHERE id = ?", (g.user["id"],)).fetchone()
+            is_admin = bool(admin_row and admin_row["is_admin"])
         finally:
             db.close()
         return render_template(
-            "dashboard.html", product_count=product_count, post_count=post_count
+            "dashboard.html", product_count=product_count, post_count=post_count, is_admin=is_admin
         )
 
     @app.route("/configurar", methods=["GET", "POST"])

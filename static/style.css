@@ -119,6 +119,10 @@ footer{text-align:center;color:#727c89;font-size:.78rem;padding:22px;border-top:
 /* Navegação da Central de Conteúdo */
 .content-nav-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 18px;position:sticky;top:0;z-index:5;padding:8px 0;background:#0b0d10ee;backdrop-filter:blur(8px)}
 .back-button,.home-content-link{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);font:inherit;font-size:.85rem;text-decoration:none;cursor:pointer}
+.home-content-link{background:var(--orange);border-color:var(--orange);color:#17100a;font-weight:800;box-shadow:none;outline:none;appearance:none;white-space:nowrap;transition:filter .15s ease,transform .15s ease}
+.home-content-link:hover{filter:brightness(1.08);text-decoration:none}
+.home-content-link:active{transform:translateY(1px)}
+.home-content-link:focus-visible{outline:2px solid #ffd0ad;outline-offset:3px}
 .status-menu{padding:18px;border:1px solid var(--line);border-radius:18px;background:var(--panel)}
 .status-menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0}
 .status-menu-card{position:relative;display:flex;flex-direction:column;gap:6px;min-width:0;padding:16px 38px 16px 14px;border:1px solid var(--line);border-radius:13px;background:#0b0d10;color:var(--text);text-decoration:none}

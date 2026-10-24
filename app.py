@@ -344,14 +344,14 @@ def create_app(test_config=None):
                 product = db.execute("SELECT id FROM products WHERE id=?", (product_id,)).fetchone() if product_id else None
                 if product is None:
                     flash("Escolha um produto cadastrado.", "error")
-                    return redirect(url_for("content"))
+                    return redirect(url_for("content", tipo=content_type, view="new"))
                 photo = request.files.get("ready_image")
                 filename = ""
                 if photo and photo.filename:
                     ext = Path(secure_filename(photo.filename)).suffix.lower()
                     if ext not in allowed_extensions:
                         flash("Imagem inválida. Use PNG, JPG, WEBP ou GIF.", "error")
-                        return redirect(url_for("content"))
+                        return redirect(url_for("content", tipo=content_type, view="new"))
                     filename = uuid.uuid4().hex + ext
                     photo.save(upload_dir / filename)
                 db.execute(
@@ -360,7 +360,7 @@ def create_app(test_config=None):
                 )
                 db.commit()
                 flash("Publicação criada e salva.", "success")
-                return redirect(url_for("content", tipo=content_type))
+                return redirect(url_for("content", tipo=content_type, status="Aguardando"))
             products_data = [dict(row) for row in db.execute("SELECT id, name, category, price, affiliate_link, notes, image_filename FROM products ORDER BY name COLLATE NOCASE").fetchall()]
             posts_data = [dict(row) for row in db.execute("""SELECT posts.*, products.name AS product_name, products.affiliate_link AS affiliate_link FROM posts LEFT JOIN products ON products.id=posts.product_id ORDER BY posts.id DESC""").fetchall()]
         finally:
@@ -383,7 +383,7 @@ def create_app(test_config=None):
         finally:
             db.close()
         flash("Status atualizado.", "success")
-        return redirect(url_for("content", tipo=request.form.get("content_type", "story")))
+        return redirect(url_for("content", tipo=request.form.get("content_type", "story"), status=status))
 
     @app.post("/produtos/<int:product_id>/excluir")
     @login_required

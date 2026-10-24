@@ -10,8 +10,25 @@
     <label for="username">Usuário</label>
     <input id="username" name="username" autocomplete="username" required>
     <label for="password">Senha</label>
-    <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <div class="password-field">
+      <input id="password" name="password" type="password" autocomplete="current-password" required>
+      <button class="password-toggle" type="button" id="toggle-password" aria-label="Mostrar senha" aria-pressed="false" title="Mostrar senha">👁️</button>
+    </div>
     <button class="button" type="submit">Entrar</button>
   </form>
 </section>
+<script>
+  (() => {
+    const password = document.getElementById("password");
+    const toggle = document.getElementById("toggle-password");
+    if (!password || !toggle) return;
+    toggle.addEventListener("click", () => {
+      const show = password.type === "password";
+      password.type = show ? "text" : "password";
+      toggle.setAttribute("aria-label", show ? "Ocultar senha" : "Mostrar senha");
+      toggle.setAttribute("aria-pressed", String(show));
+      toggle.title = show ? "Ocultar senha" : "Mostrar senha";
+    });
+  })();
+</script>
 {% endblock %}

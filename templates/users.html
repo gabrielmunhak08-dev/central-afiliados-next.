@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Usuários · Central de Afiliados{% endblock %}
+{% block content %}
+<section class="section-heading">
+  <p class="eyebrow">ADMINISTRAÇÃO</p>
+  <h1>Gerenciar <span class="accent">usuários.</span></h1>
+  <p class="muted">Cada pessoa usa seu próprio login. As contas compartilham os mesmos produtos e publicações.</p>
+  <a class="button button-quiet" href="{{ url_for('dashboard') }}">← Voltar ao painel</a>
+</section>
+<section class="form-card">
+  <h2>Criar novo acesso</h2>
+  <form method="post" class="form-stack">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <label for="username">Nome de usuário</label>
+    <input id="username" name="username" minlength="3" maxlength="40" autocomplete="off" required>
+    <label for="password">Senha (mínimo de 12 caracteres)</label>
+    <input id="password" name="password" type="password" minlength="12" autocomplete="new-password" required>
+    <label for="confirmation">Confirmar senha</label>
+    <input id="confirmation" name="confirmation" type="password" minlength="12" autocomplete="new-password" required>
+    <button class="button" type="submit">Criar usuário</button>
+  </form>
+</section>
+<section class="section-heading"><div><h2>Contas cadastradas</h2></div></section>
+<div class="module-grid">
+{% for user in users %}
+  <article class="module-card">
+    <h3>{{ user.username }}</h3>
+    <p>{{ 'Administrador' if user.is_admin else 'Usuário padrão' }}</p>
+    <p class="muted">Criado em {{ user.created_at }}</p>
+  </article>
+{% endfor %}
+</div>
+{% endblock %}

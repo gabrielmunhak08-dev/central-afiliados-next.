@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Entrar · Central de Afiliados{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <p class="eyebrow">ÁREA PRIVADA</p>
+  <h1>Bem-vindo <span class="accent">de volta.</span></h1>
+  <p class="muted">Entre com o usuário e a senha definidos na configuração inicial.</p>
+  <form method="post" class="form-stack">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <label for="username">Usuário</label>
+    <input id="username" name="username" autocomplete="username" required>
+    <label for="password">Senha</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <button class="button" type="submit">Entrar</button>
+  </form>
+</section>
+{% endblock %}

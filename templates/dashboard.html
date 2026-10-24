@@ -15,5 +15,6 @@
   <article class="module-card"><span class="module-number">03</span><h3>Calendário</h3><p>Organize a semana e acompanhe o estado de cada publicação.</p><span class="tag">Planejado</span></article>
   <article class="module-card"><span class="module-number">04</span><h3>Resultados</h3><p>Cliques, vendas e comissões com estimativas claramente identificadas.</p><span class="tag">Planejado</span></article>
 </div>
+{% if is_admin %}<section class="section-heading"><div><h2>Administração</h2><p class="muted">Crie acessos individuais para pessoas que vão testar a Central.</p></div><a class="button button-small" href="{{ url_for('users_admin') }}">Gerenciar usuários →</a></section>{% endif %}
 <p class="small-note">Ainda não publique este servidor diretamente na internet. A aplicação está em desenvolvimento e precisa passar pelos testes e pela instalação no seu ambiente.</p>
 {% endblock %}

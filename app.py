@@ -385,6 +385,26 @@ def create_app(test_config=None):
         flash("Status atualizado.", "success")
         return redirect(url_for("content", tipo=request.form.get("content_type", "story"), status=status))
 
+    @app.post("/conteudo/<int:post_id>/excluir")
+    @login_required
+    def content_delete(post_id):
+        db = connect_db()
+        try:
+            row = db.execute("SELECT image_filename, content_type, status FROM posts WHERE id=?", (post_id,)).fetchone()
+            if row is None:
+                abort(404)
+            filename = row["image_filename"]
+            content_type = request.form.get("content_type", row["content_type"] or "story")
+            status = request.form.get("status", row["status"] or "Aguardando")
+            db.execute("DELETE FROM posts WHERE id=?", (post_id,))
+            db.commit()
+            if filename:
+                (upload_dir / filename).unlink(missing_ok=True)
+            flash("Publicação excluída.", "success")
+        finally:
+            db.close()
+        return redirect(url_for("content", tipo=content_type, status=status))
+
     @app.post("/produtos/<int:product_id>/excluir")
     @login_required
     def product_delete(product_id):

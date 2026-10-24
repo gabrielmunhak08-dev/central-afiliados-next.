@@ -66,3 +66,7 @@ footer{text-align:center;color:#727c89;font-size:.78rem;padding:22px;border-top:
 .form-card .percent-input{display:flex;width:100%;max-width:100%;vertical-align:middle}
 .form-card .percent-input input{flex:1 1 0;width:100%;min-width:0;max-width:none;padding:12px 13px}
 .form-card .percent-input span{display:flex;align-items:center;justify-content:center;min-width:46px;padding:0 13px;border-left:1px solid var(--line)!important;border-right:0;background:var(--panel2)!important}
+
+/* Símbolo de porcentagem à esquerda, mantendo o campo em largura padrão. */
+.form-card .percent-input{display:flex;width:100%;max-width:100%}
+.form-card .percent-input span{order:-1;border-left:0!important;border-right:1px solid var(--line)!important}

@@ -96,6 +96,14 @@ def create_app(test_config=None):
                     value TEXT NOT NULL DEFAULT ''
                 );
             """)
+            # Migração segura para usuários e publicações, sem apagar dados existentes.
+            user_columns = {row[1] for row in db.execute("PRAGMA table_info(users)").fetchall()}
+            if "is_admin" not in user_columns:
+                db.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0")
+            if db.execute("SELECT COUNT(*) FROM users WHERE is_admin = 1").fetchone()[0] == 0:
+                first_user = db.execute("SELECT id FROM users ORDER BY id LIMIT 1").fetchone()
+                if first_user:
+                    db.execute("UPDATE users SET is_admin = 1 WHERE id = ?", (first_user["id"],))
             # Migração segura para publicações, sem apagar dados existentes.
             post_columns = {row[1] for row in db.execute("PRAGMA table_info(posts)").fetchall()}
             if "content_type" not in post_columns:
@@ -232,6 +240,41 @@ def create_app(test_config=None):
                 return redirect(destination)
             flash("Usuário ou senha incorretos.", "error")
         return render_template("login.html")
+
+    @app.route("/usuarios", methods=["GET", "POST"])
+    @login_required
+    def users_admin():
+        db = connect_db()
+        try:
+            current = db.execute("SELECT is_admin FROM users WHERE id = ?", (g.user["id"],)).fetchone()
+            if not current or not current["is_admin"]:
+                abort(403)
+            if request.method == "POST":
+                username = request.form.get("username", "").strip()
+                password = request.form.get("password", "")
+                confirmation = request.form.get("confirmation", "")
+                if len(username) < 3 or len(username) > 40:
+                    flash("O usuário precisa ter de 3 a 40 caracteres.", "error")
+                elif len(password) < 12:
+                    flash("Use uma senha com pelo menos 12 caracteres.", "error")
+                elif password != confirmation:
+                    flash("As senhas não coincidem.", "error")
+                else:
+                    try:
+                        db.execute(
+                            "INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, 0)",
+                            (username, generate_password_hash(password)),
+                        )
+                        db.commit()
+                        flash("Usuário criado com sucesso.", "success")
+                        return redirect(url_for("users_admin"))
+                    except sqlite3.IntegrityError:
+                        db.rollback()
+                        flash("Esse usuário já existe. Escolha outro.", "error")
+            users = db.execute("SELECT id, username, is_admin, created_at FROM users ORDER BY id").fetchall()
+            return render_template("users.html", users=users)
+        finally:
+            db.close()
 
     @app.post("/logout")
     @login_required

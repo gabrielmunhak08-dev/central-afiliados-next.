@@ -21,6 +21,7 @@
   <a class="button new-publication-button" href="{{ url_for('content', tipo=tipo, view='new') }}">＋ Nova publicação</a>
 </section>
 {% endif %}
+{% if request.args.get("view") == "new" %}
 <section class="content-create">
   <h2>Preparar publicação</h2>
   {% if products %}
@@ -45,6 +46,8 @@
   </form>
   {% else %}<div class="empty-state">Primeiro, cadastre um produto no <a href="{{ url_for('products') }}">Catálogo</a>.</div>{% endif %}
 </section>
+{% endif %}
+{% if request.args.get("status") %}
 <section class="section-heading content-list-heading"><div><p class="eyebrow">SEU FLUXO DE TRABALHO</p><h2>{{ 'Stories' if tipo == 'story' else 'Feed / Posts' }} salvos</h2></div></section>
 {% set visible_posts = posts|selectattr('content_type', 'equalto', tipo)|list %}
 {% if visible_posts %}

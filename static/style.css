@@ -125,3 +125,12 @@ footer{text-align:center;color:#727c89;font-size:.78rem;padding:22px;border-top:
 .status-menu-card strong{overflow-wrap:anywhere}.status-menu-card small{color:var(--muted);font-size:.78rem}.status-menu-card span{position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:1.5rem;color:var(--orange)}
 .new-publication-button{width:100%;margin-top:4px}
 @media(max-width:480px){.status-menu{padding:13px}.status-menu-grid{grid-template-columns:1fr}.content-nav-row{margin-bottom:12px}.back-button,.home-content-link{font-size:.8rem;padding:8px 10px}}
+
+
+/* Ações destrutivas discretas, disponíveis dentro dos formulários e cartões. */
+.button-danger{background:transparent;border-color:#7a3933;color:#ffaaa0}
+.button-danger:hover{background:#301715;border-color:#a64a40}
+.form-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.form-actions .button{margin-top:0}
+.content-delete-row{display:flex;justify-content:flex-end;margin:12px 0 4px}
+.content-delete-row form{margin:0}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Conteúdo · Central de Afiliados{% endblock %}
+{% block content %}
+<section class="section-heading">
+  <div><p class="eyebrow">INSTAGRAM</p><h1>Central de <span class="accent">conteúdo</span></h1><p class="muted">Prepare, organize e publique manualmente. Stories e posts ficam separados.</p></div>
+</section>
+<nav class="content-tabs">
+  <a class="{{ 'active' if tipo == 'story' else '' }}" href="{{ url_for('content', tipo='story') }}">▣ Stories</a>
+  <a class="{{ 'active' if tipo == 'post' else '' }}" href="{{ url_for('content', tipo='post') }}">▤ Feed / Posts</a>
+</nav>
+<section class="content-create">
+  <h2>Preparar publicação</h2>
+  {% if products %}
+  <form class="form-card" method="post" enctype="multipart/form-data" action="{{ url_for('content') }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="content_type" value="{{ tipo }}">
+    <label>Produto cadastrado
+      <select name="product_id" id="content-product" required>
+        <option value="">Escolha ou pesquise um produto</option>
+        {% for p in products %}<option value="{{ p.id }}" data-link="{{ p.affiliate_link|e }}" data-notes="{{ p.notes|e }}" data-name="{{ p.name|e }}">{{ p.name }}{% if p.category %} · {{ p.category }}{% endif %}</option>{% endfor %}
+      </select>
+    </label>
+    <div id="product-details" class="product-details muted">Escolha um produto para ver os dados salvos.</div>
+    <label>Imagem pronta para publicar
+      <input type="file" name="ready_image" accept=".png,.jpg,.jpeg,.webp,.gif,image/*">
+      <small>Opcional agora; pode criar o rascunho e adicionar a imagem quando estiver pronta, editando o rascunho numa próxima etapa.</small>
+    </label>
+    <label>Legenda / descrição
+      <textarea name="caption" rows="4" placeholder="Escreva ou cole a legenda da publicação..."></textarea>
+    </label>
+    <button class="button" type="submit">Salvar em {{ 'Stories' if tipo == 'story' else 'Feed / Posts' }}</button>
+  </form>
+  {% else %}<div class="empty-state">Primeiro, cadastre um produto no <a href="{{ url_for('products') }}">Catálogo</a>.</div>{% endif %}
+</section>
+<section class="section-heading content-list-heading"><div><p class="eyebrow">SEU FLUXO DE TRABALHO</p><h2>{{ 'Stories' if tipo == 'story' else 'Feed / Posts' }} salvos</h2></div></section>
+{% set visible_posts = posts|selectattr('content_type', 'equalto', tipo)|list %}
+{% if visible_posts %}
+<div class="content-list">
+{% for p in visible_posts %}
+<article class="content-card">
+  <div class="content-card-top"><div><p class="eyebrow">PUBLICAÇÃO #{{ p.id }}</p><h3>{{ p.product_name or 'Produto removido' }}</h3></div><span class="status-chip status-{{ p.status|lower|replace(' ', '-') }}">{{ p.status }}</span></div>
+  {% if p.image_filename %}<a href="{{ url_for('uploaded_file', filename=p.image_filename) }}" target="_blank"><img class="ready-art" src="{{ url_for('uploaded_file', filename=p.image_filename) }}" alt="Imagem preparada para {{ p.product_name or 'publicação' }}"></a><a class="text-link" href="{{ url_for('uploaded_file', filename=p.image_filename) }}" download>Baixar imagem para o celular</a>{% else %}<p class="muted small-note">Imagem ainda não adicionada.</p>{% endif %}
+  {% if p.caption %}<div class="caption-box">{{ p.caption }}</div>{% endif %}
+  <div class="content-actions">
+    {% if p.affiliate_link %}<button class="button button-small button-quiet" type="button" data-copy="{{ p.affiliate_link|e }}" onclick="copyContentLink(this)">Copiar link de afiliado</button>{% endif %}
+    <a class="button button-small" href="https://www.instagram.com/" target="_blank" rel="noopener">Abrir Instagram ↗</a>
+  </div>
+  <form class="status-form" method="post" action="{{ url_for('content_status', post_id=p.id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="content_type" value="{{ tipo }}">
+    <label>Atualizar status
+      <select name="status">
+        {% for s in ['Aguardando', 'Fazendo', 'Pronto para postar', 'Publicado'] %}<option value="{{ s }}" {{ 'selected' if p.status == s else '' }}>{{ s }}</option>{% endfor %}
+      </select>
+    </label><button class="button button-small button-quiet" type="submit">Salvar status</button>
+  </form>
+</article>
+{% endfor %}
+</div>
+{% else %}<div class="empty-state">Ainda não há publicações nesta área. Cria a primeira ali em cima.</div>{% endif %}
+<script>
+const productSelect = document.getElementById('content-product');
+if (productSelect) productSelect.addEventListener('change', function () {
+  const option = this.options[this.selectedIndex];
+  const box = document.getElementById('product-details');
+  if (!option || !option.value) { box.textContent = 'Escolha um produto para ver os dados salvos.'; return; }
+  const notes = option.dataset.notes || 'Sem descrição cadastrada.';
+  const link = option.dataset.link || 'Nenhum link de afiliado cadastrado.';
+  box.textContent = option.dataset.name + ' — ' + notes + ' | Link: ' + link;
+});
+async function copyContentLink(button) {
+  const link = button.dataset.copy || '';
+  try { await navigator.clipboard.writeText(link); button.textContent = 'Link copiado!'; }
+  catch (e) { window.prompt('Copie o link de afiliado:', link); }
+}
+</script>
+{% endblock %}

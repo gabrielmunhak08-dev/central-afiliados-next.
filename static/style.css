@@ -31,3 +31,26 @@ p{line-height:1.65}.muted,.module-card p{color:var(--muted)}
 .small-note{line-height:1.6;margin-top:24px}
 footer{text-align:center;color:#727c89;font-size:.78rem;padding:22px;border-top:1px solid var(--line)}
 @media(max-width:560px){.topbar{min-height:60px;padding:10px 14px}.version{font-size:.58rem;letter-spacing:.7px}.page{padding:24px 14px 42px}.module-grid{grid-template-columns:1fr}.welcome{border-radius:18px}h1{letter-spacing:-1.2px}.auth-card{border-radius:17px}.account{gap:7px}}
+
+.section-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:12px 0 22px}
+.section-heading h1{margin:8px 0}
+.search-bar{display:flex;gap:8px;margin:18px 0 24px}
+.search-bar input,.form-card input,.form-card textarea{width:100%;min-width:0;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:#0b0d10;color:var(--text);font:inherit}
+.search-bar input{flex:1}
+.form-card{display:flex;flex-direction:column;gap:15px;max-width:760px;padding:20px;border:1px solid var(--line);border-radius:18px;background:var(--panel)}
+.form-card label{display:flex;flex-direction:column;gap:7px;font-size:.9rem;font-weight:650}
+.form-card small{font-size:.78rem;color:var(--muted);font-weight:400}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.products-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.product-card{overflow:hidden;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
+.product-thumb{display:block;height:180px;background:#0b0d10}
+.product-thumb img{width:100%;height:100%;object-fit:contain}
+.no-image{display:grid;place-items:center;height:100%;color:var(--muted)}
+.product-info{padding:14px}.product-info h2{font-size:1.05rem;overflow-wrap:anywhere}
+.product-info h2 a{color:var(--text);text-decoration:none}
+.product-price{color:var(--orange);font-weight:800}
+.product-category{font-size:.75rem;color:var(--muted);margin:0}
+.text-link{color:var(--orange);font-size:.84rem;overflow-wrap:anywhere}
+.form-thumb{width:100px;height:100px;object-fit:contain;background:#0b0d10;border:1px solid var(--line);border-radius:10px}
+.photo-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+@media(max-width:560px){.products-grid{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}.product-thumb{height:210px}.search-bar{flex-wrap:wrap}.search-bar .button{margin-top:0}}

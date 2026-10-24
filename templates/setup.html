@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Configuração inicial · Central de Afiliados{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <p class="eyebrow">PRIMEIRO ACESSO</p>
+  <h1>Crie seu <span class="accent">acesso privado.</span></h1>
+  <p class="muted">Esta etapa aparece apenas enquanto não existe nenhum usuário. Não há senha padrão: você define as suas credenciais.</p>
+  <form method="post" class="form-stack">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <label for="username">Nome de usuário</label>
+    <input id="username" name="username" autocomplete="username" minlength="3" maxlength="40" required>
+    <label for="password">Senha (mínimo 12 caracteres)</label>
+    <input id="password" name="password" type="password" autocomplete="new-password" minlength="12" required>
+    <label for="confirmation">Confirme a senha</label>
+    <input id="confirmation" name="confirmation" type="password" autocomplete="new-password" minlength="12" required>
+    <button class="button" type="submit">Criar acesso e entrar</button>
+  </form>
+  <p class="small-note">Guarde a senha em local seguro. A senha é armazenada como hash, não em texto aberto.</p>
+</section>
+{% endblock %}

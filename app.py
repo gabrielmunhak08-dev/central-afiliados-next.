@@ -96,6 +96,12 @@ def create_app(test_config=None):
                     value TEXT NOT NULL DEFAULT ''
                 );
             """)
+            # Migração segura para publicações, sem apagar dados existentes.
+            post_columns = {row[1] for row in db.execute("PRAGMA table_info(posts)").fetchall()}
+            if "content_type" not in post_columns:
+                db.execute("ALTER TABLE posts ADD COLUMN content_type TEXT NOT NULL DEFAULT 'story'")
+            if "image_filename" not in post_columns:
+                db.execute("ALTER TABLE posts ADD COLUMN image_filename TEXT NOT NULL DEFAULT ''")
             db.commit()
         finally:
             db.close()
@@ -323,6 +329,61 @@ def create_app(test_config=None):
             return render_template("product_form.html", product=product, product_photos=extras)
         finally:
             db.close()
+
+    @app.route("/conteudo", methods=["GET", "POST"])
+    @login_required
+    def content():
+        db = connect_db()
+        try:
+            if request.method == "POST":
+                product_id = request.form.get("product_id", type=int)
+                content_type = request.form.get("content_type", "story").strip().lower()
+                caption = request.form.get("caption", "").strip()
+                if content_type not in {"story", "post"}:
+                    abort(400)
+                product = db.execute("SELECT id FROM products WHERE id=?", (product_id,)).fetchone() if product_id else None
+                if product is None:
+                    flash("Escolha um produto cadastrado.", "error")
+                    return redirect(url_for("content"))
+                photo = request.files.get("ready_image")
+                filename = ""
+                if photo and photo.filename:
+                    ext = Path(secure_filename(photo.filename)).suffix.lower()
+                    if ext not in allowed_extensions:
+                        flash("Imagem inválida. Use PNG, JPG, WEBP ou GIF.", "error")
+                        return redirect(url_for("content"))
+                    filename = uuid.uuid4().hex + ext
+                    photo.save(upload_dir / filename)
+                db.execute(
+                    "INSERT INTO posts (product_id, caption, platform, status, content_type, image_filename) VALUES (?, ?, 'Instagram', 'Aguardando', ?, ?)",
+                    (product_id, caption, content_type, filename),
+                )
+                db.commit()
+                flash("Publicação criada e salva.", "success")
+                return redirect(url_for("content", tipo=content_type))
+            products_data = [dict(row) for row in db.execute("SELECT id, name, category, price, affiliate_link, notes, image_filename FROM products ORDER BY name COLLATE NOCASE").fetchall()]
+            posts_data = [dict(row) for row in db.execute("""SELECT posts.*, products.name AS product_name, products.affiliate_link AS affiliate_link FROM posts LEFT JOIN products ON products.id=posts.product_id ORDER BY posts.id DESC""").fetchall()]
+        finally:
+            db.close()
+        return render_template("content.html", products=products_data, posts=posts_data, tipo=request.args.get("tipo", "story"))
+
+    @app.post("/conteudo/<int:post_id>/status")
+    @login_required
+    def content_status(post_id):
+        status = request.form.get("status", "")
+        allowed_statuses = {"Aguardando", "Fazendo", "Pronto para postar", "Publicado"}
+        if status not in allowed_statuses:
+            abort(400)
+        db = connect_db()
+        try:
+            cur = db.execute("UPDATE posts SET status=? WHERE id=?", (status, post_id))
+            if cur.rowcount == 0:
+                abort(404)
+            db.commit()
+        finally:
+            db.close()
+        flash("Status atualizado.", "success")
+        return redirect(url_for("content", tipo=request.form.get("content_type", "story")))
 
     @app.post("/produtos/<int:product_id>/excluir")
     @login_required

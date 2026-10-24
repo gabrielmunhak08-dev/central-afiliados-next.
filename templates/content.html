@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Conteúdo · Central de Afiliados{% endblock %}
 {% block content %}
-<div class="content-nav-row"><button class="back-button" type="button" onclick="history.back()">← Voltar</button><a class="home-content-link" href="{{ url_for('dashboard') }}">Central principal</a></div>
+<div class="content-nav-row"><button class="back-button" type="button" onclick="if (history.length > 1) history.back(); else location.href='{{ url_for('content', tipo=tipo) }}'">← Voltar</button><a class="home-content-link" href="{{ url_for('dashboard') }}">Central principal</a></div>
 <section class="section-heading">
   <div><p class="eyebrow">INSTAGRAM</p><h1>Central de <span class="accent">conteúdo</span></h1><p class="muted">Prepare, organize e publique manualmente. Stories e posts ficam separados.</p></div>
 </section>

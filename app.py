@@ -237,6 +237,102 @@ def create_app(test_config=None):
     def health():
         return {"status": "ok", "application": "central-afiliados-next"}
 
+    from werkzeug.utils import secure_filename
+    import uuid
+    upload_dir = Path(app.static_folder) / "uploads"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    allowed_extensions = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
+
+    @app.get("/produtos")
+    @login_required
+    def products():
+        q = request.args.get("q", "").strip()
+        db = connect_db()
+        try:
+            sql = """SELECT p.*, (SELECT COUNT(*) FROM product_images i WHERE i.product_id=p.id) AS extra_images FROM products p"""
+            if q:
+                rows = db.execute(sql + " WHERE p.name LIKE ? OR p.category LIKE ? ORDER BY p.id DESC", (f"%{q}%", f"%{q}%")).fetchall()
+            else:
+                rows = db.execute(sql + " ORDER BY p.id DESC").fetchall()
+            products_data = [dict(row) for row in rows]
+        finally:
+            db.close()
+        return render_template("products.html", products=products_data, q=q)
+
+    @app.route("/produtos/novo", methods=["GET", "POST"])
+    @app.route("/produtos/<int:product_id>/editar", methods=["GET", "POST"])
+    @login_required
+    def product_form(product_id=None):
+        db = connect_db()
+        try:
+            product = db.execute("SELECT * FROM products WHERE id=?", (product_id,)).fetchone() if product_id else None
+            if product_id and product is None:
+                abort(404)
+            if request.method == "POST":
+                name = request.form.get("name", "").strip()
+                category = request.form.get("category", "").strip()
+                link = request.form.get("affiliate_link", "").strip()
+                notes = request.form.get("notes", "").strip()
+                try:
+                    price = float(request.form.get("price", "").strip().replace(",", ".")) if request.form.get("price", "").strip() else None
+                    commission = float(request.form.get("commission", "").strip().replace(",", ".")) if request.form.get("commission", "").strip() else None
+                    if (price is not None and price < 0) or (commission is not None and commission < 0): raise ValueError()
+                except ValueError:
+                    flash("Preço e comissão precisam ser valores positivos.", "error")
+                    return redirect(request.url)
+                if not name:
+                    flash("Informe o nome do produto.", "error")
+                    return redirect(request.url)
+                if product:
+                    db.execute("UPDATE products SET name=?, category=?, price=?, affiliate_link=?, commission=?, notes=? WHERE id=?", (name, category, price, link, commission, notes, product_id))
+                    pid = product_id
+                else:
+                    cur = db.execute("INSERT INTO products (name, category, price, affiliate_link, commission, notes) VALUES (?, ?, ?, ?, ?, ?)", (name, category, price, link, commission, notes))
+                    pid = cur.lastrowid
+                main = db.execute("SELECT image_filename FROM products WHERE id=?", (pid,)).fetchone()["image_filename"]
+                extra_count = db.execute("SELECT COUNT(*) FROM product_images WHERE product_id=?", (pid,)).fetchone()[0]
+                for photo in request.files.getlist("photos"):
+                    if not photo or not photo.filename: continue
+                    ext = Path(secure_filename(photo.filename)).suffix.lower()
+                    if ext not in allowed_extensions:
+                        flash("Formato não aceito. Use PNG, JPG, WEBP ou GIF.", "error")
+                        continue
+                    if (1 if main else 0) + extra_count >= 10:
+                        flash("Limite de 10 fotos por produto atingido.", "error")
+                        break
+                    filename = uuid.uuid4().hex + ext
+                    photo.save(upload_dir / filename)
+                    if not main:
+                        db.execute("UPDATE products SET image_filename=? WHERE id=?", (filename, pid))
+                        main = filename
+                    else:
+                        db.execute("INSERT INTO product_images (product_id, filename) VALUES (?, ?)", (pid, filename))
+                        extra_count += 1
+                db.commit()
+                flash("Produto salvo.", "success")
+                return redirect(url_for("products"))
+            extras = db.execute("SELECT id, filename FROM product_images WHERE product_id=? ORDER BY id", (product_id,)).fetchall() if product_id else []
+            return render_template("product_form.html", product=product, product_photos=extras)
+        finally:
+            db.close()
+
+    @app.post("/produtos/<int:product_id>/excluir")
+    @login_required
+    def product_delete(product_id):
+        db = connect_db()
+        try:
+            row = db.execute("SELECT image_filename FROM products WHERE id=?", (product_id,)).fetchone()
+            if row is None: abort(404)
+            names = [row["image_filename"]] if row["image_filename"] else []
+            names += [x["filename"] for x in db.execute("SELECT filename FROM product_images WHERE product_id=?", (product_id,)).fetchall()]
+            db.execute("DELETE FROM products WHERE id=?", (product_id,))
+            db.commit()
+            for filename in names: (upload_dir / filename).unlink(missing_ok=True)
+            flash("Produto excluído.", "success")
+        finally:
+            db.close()
+        return redirect(url_for("products"))
+
     return app
 
 

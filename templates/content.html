@@ -9,6 +9,18 @@
   <a class="{{ 'active' if tipo == 'story' else '' }}" href="{{ url_for('content', tipo='story') }}">▣ Stories</a>
   <a class="{{ 'active' if tipo == 'post' else '' }}" href="{{ url_for('content', tipo='post') }}">▤ Feed / Posts</a>
 </nav>
+{% if not request.args.get('status') and request.args.get('view') != 'new' %}
+<section class="status-menu">
+  <h2>{{ 'Seus Stories' if tipo == 'story' else 'Seus posts do Feed' }}</h2>
+  <p class="muted">Escolha uma etapa para ver somente as publicações dela.</p>
+  <div class="status-menu-grid">
+  {% for s, desc in [('Aguardando','Ainda não começaram'),('Fazendo','Em preparação'),('Pronto para postar','Finalizados para publicar'),('Publicado','Já publicados')] %}
+    <a class="status-menu-card" href="{{ url_for('content', tipo=tipo, status=s) }}"><strong>{{ s }}</strong><small>{{ desc }}</small><span>›</span></a>
+  {% endfor %}
+  </div>
+  <a class="button new-publication-button" href="{{ url_for('content', tipo=tipo, view='new') }}">＋ Nova publicação</a>
+</section>
+{% endif %}
 <section class="content-create">
   <h2>Preparar publicação</h2>
   {% if products %}

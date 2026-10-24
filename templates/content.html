@@ -48,7 +48,7 @@
 </section>
 {% endif %}
 {% if request.args.get("status") %}
-<section class="section-heading content-list-heading"><div><p class="eyebrow">SEU FLUXO DE TRABALHO</p><h2>{{ 'Stories' if tipo == 'story' else 'Feed / Posts' }} salvos</h2></div></section>
+<section class="section-heading content-list-heading"><div><p class="eyebrow">SEU FLUXO DE TRABALHO</p><h2>{{ request.args.get("status") }}</h2><p class="muted">Publicações desta etapa.</p></div><a class="button button-small" href="{{ url_for('content', tipo=tipo, view='new') }}">＋ Nova publicação</a></section>
 {% set visible_posts = posts|selectattr('content_type', 'equalto', tipo)|selectattr('status', 'equalto', request.args.get('status'))|list %}
 {% if visible_posts %}
 <div class="content-list">

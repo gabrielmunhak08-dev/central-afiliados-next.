@@ -9,10 +9,15 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="{{ url_for('dashboard') }}"><span class="brand-mark">C</span> Central <span class="accent">Afiliados</span></a>
-    <span class="version">NOVA BASE · v0.1</span>
+    <a class="brand" href="{{ url_for('dashboard') if g.user else url_for('login') }}"><span class="brand-mark">C</span> Central <span class="accent">Afiliados</span></a>
+    {% if g.user %}<div class="account"><span class="version">{{ g.user['username'] }}</span><form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button class="button button-small button-quiet" type="submit">Sair</button></form></div>{% else %}<span class="version">ACESSO PRIVADO</span>{% endif %}
   </header>
-  <main class="page">{% block content %}{% endblock %}</main>
+  <main class="page">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}<div class="flash-list">{% for category, message in messages %}<div class="flash flash-{{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
   <footer>Projeto em construção · dados reais, sem métricas inventadas.</footer>
 </body>
 </html>

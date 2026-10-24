@@ -49,7 +49,7 @@
 {% endif %}
 {% if request.args.get("status") %}
 <section class="section-heading content-list-heading"><div><p class="eyebrow">SEU FLUXO DE TRABALHO</p><h2>{{ 'Stories' if tipo == 'story' else 'Feed / Posts' }} salvos</h2></div></section>
-{% set visible_posts = posts|selectattr('content_type', 'equalto', tipo)|list %}
+{% set visible_posts = posts|selectattr('content_type', 'equalto', tipo)|selectattr('status', 'equalto', request.args.get('status'))|list %}
 {% if visible_posts %}
 <div class="content-list">
 {% for p in visible_posts %}
@@ -76,7 +76,8 @@
 </article>
 {% endfor %}
 </div>
-{% else %}<div class="empty-state">Ainda não há publicações nesta área. Cria a primeira ali em cima.</div>{% endif %}
+{% else %}<div class="empty-state">Ainda não há publicações com esse status nesta área.</div>{% endif %}
+{% endif %}
 <script>
 const productSelect = document.getElementById('content-product');
 if (productSelect) productSelect.addEventListener('change', function () {

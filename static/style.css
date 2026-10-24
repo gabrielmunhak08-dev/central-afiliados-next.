@@ -70,3 +70,12 @@ footer{text-align:center;color:#727c89;font-size:.78rem;padding:22px;border-top:
 /* Símbolo de porcentagem à esquerda, mantendo o campo em largura padrão. */
 .form-card .percent-input{display:flex;width:100%;max-width:100%}
 .form-card .percent-input span{order:-1;border-left:0!important;border-right:1px solid var(--line)!important}
+
+
+/* Campo de senha com botão para mostrar ou ocultar o texto. */
+.password-field{display:flex;align-items:stretch;width:100%;border:1px solid #3a424d;border-radius:11px;background:#0b0d10;overflow:hidden}
+.password-field:focus-within{outline:2px solid #ff6b0077;border-color:var(--orange)}
+.form-stack .password-field input{flex:1;min-width:0;width:100%;border:0;border-radius:0;background:transparent}
+.form-stack .password-field input:focus{outline:none}
+.password-toggle{flex:0 0 48px;border:0;border-left:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:1.15rem;cursor:pointer}
+.password-toggle:focus-visible{outline:2px solid var(--orange);outline-offset:-3px}

@@ -65,6 +65,7 @@
     {% endif %}
     <a class="button button-small" href="https://www.instagram.com/" target="_blank" rel="noopener">Abrir Instagram ↗</a>
   </div>
+  <div class="content-delete-row"><form method="post" action="{{ url_for('content_delete', post_id=p.id) }}" onsubmit="return confirm('Excluir esta publicação e a imagem preparada dela? Esta ação não pode ser desfeita.');"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="content_type" value="{{ tipo }}"><input type="hidden" name="status" value="{{ p.status }}"><button class="button button-small button-danger" type="submit">Excluir publicação</button></form></div>
   <form class="status-form" method="post" action="{{ url_for('content_status', post_id=p.id) }}">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="content_type" value="{{ tipo }}">
     <label>Atualizar status

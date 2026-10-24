@@ -7,7 +7,7 @@ from pathlib import Path
 from functools import wraps
 
 from flask import (
-    Flask, abort, flash, g, redirect, render_template, request, session, url_for
+    Flask, abort, flash, g, redirect, render_template, request, session, url_for, send_from_directory
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -241,6 +241,11 @@ def create_app(test_config=None):
     import uuid
     upload_dir = Path(app.static_folder) / "uploads"
     upload_dir.mkdir(parents=True, exist_ok=True)
+
+    @app.get("/uploads/<path:filename>")
+    @login_required
+    def uploaded_file(filename):
+        return send_from_directory(upload_dir, filename)
     allowed_extensions = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 
     @app.get("/produtos")

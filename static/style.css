@@ -54,3 +54,5 @@ footer{text-align:center;color:#727c89;font-size:.78rem;padding:22px;border-top:
 .form-thumb{width:100px;height:100px;object-fit:contain;background:#0b0d10;border:1px solid var(--line);border-radius:10px}
 .photo-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
 @media(max-width:560px){.products-grid{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}.product-thumb{height:210px}.search-bar{flex-wrap:wrap}.search-bar .button{margin-top:0}}
+
+.currency-input{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:10px;background:#0b0d10;overflow:hidden}.currency-input:focus-within{outline:2px solid #ff6b0077;border-color:var(--orange)}.form-card .currency-input span{display:flex;align-items:center;padding:0 13px;background:var(--panel2);border-right:1px solid var(--line);font-weight:750;color:var(--orange)}.form-card .currency-input input{flex:1;border:0;border-radius:0;background:transparent;min-width:0}.form-card .currency-input input:focus{outline:none}

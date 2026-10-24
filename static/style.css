@@ -61,3 +61,8 @@ footer{text-align:center;color:#727c89;font-size:.78rem;padding:22px;border-top:
 
 /* Percentual encostado ao valor, como o prefixo R$ no preço. */
 .form-card .percent-input{display:inline-flex;width:max-content;max-width:100%;vertical-align:middle}.form-card .percent-input input{flex:0 1 auto;width:3ch;min-width:2ch;max-width:calc(100% - 30px);padding-left:12px;padding-right:2px}.form-card .percent-input span{min-width:0;padding:0 8px;border-left:0!important;background:transparent!important}
+
+/* Campo de comissão no tamanho padrão, com o símbolo % no lado direito. */
+.form-card .percent-input{display:flex;width:100%;max-width:100%;vertical-align:middle}
+.form-card .percent-input input{flex:1 1 0;width:100%;min-width:0;max-width:none;padding:12px 13px}
+.form-card .percent-input span{display:flex;align-items:center;justify-content:center;min-width:46px;padding:0 13px;border-left:1px solid var(--line)!important;border-right:0;background:var(--panel2)!important}

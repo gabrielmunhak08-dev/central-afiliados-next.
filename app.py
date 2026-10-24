@@ -279,11 +279,14 @@ def create_app(test_config=None):
                 link = request.form.get("affiliate_link", "").strip()
                 notes = request.form.get("notes", "").strip()
                 try:
-                    price = float(request.form.get("price", "").strip().replace(",", ".")) if request.form.get("price", "").strip() else None
-                    commission = float(request.form.get("commission", "").strip().replace(",", ".")) if request.form.get("commission", "").strip() else None
-                    if (price is not None and price < 0) or (commission is not None and commission < 0): raise ValueError()
+                    price_raw = request.form.get("price", "").strip().replace(",", ".")
+                    commission_raw = request.form.get("commission", "").strip().replace("%", "").replace(",", ".")
+                    price = float(price_raw) if price_raw else None
+                    commission = float(commission_raw) if commission_raw else None
+                    if (price is not None and price <= 0) or (commission is not None and not 0 < commission <= 100):
+                        raise ValueError()
                 except ValueError:
-                    flash("Preço e comissão precisam ser valores positivos.", "error")
+                    flash("Informe um preço positivo e uma comissão entre 0 e 100%.", "error")
                     return redirect(request.url)
                 if not name:
                     flash("Informe o nome do produto.", "error")

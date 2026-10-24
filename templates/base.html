@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0d10">
+  <title>{% block title %}Central de Afiliados{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('dashboard') }}"><span class="brand-mark">C</span> Central <span class="accent">Afiliados</span></a>
+    <span class="version">NOVA BASE · v0.1</span>
+  </header>
+  <main class="page">{% block content %}{% endblock %}</main>
+  <footer>Projeto em construção · dados reais, sem métricas inventadas.</footer>
+</body>
+</html>

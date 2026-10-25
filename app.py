@@ -97,7 +97,8 @@ def create_app(test_config=None):
                 );
             """)
             # Migração segura para usuários e publicações, sem apagar dados existentes.
-            user_columns = {row[1] for row in db.execute("PRAGMA table_info(users)").fetchall()}            if "is_admin" not in user_columns:
+            user_columns = {row[1] for row in db.execute("PRAGMA table_info(users)").fetchall()}
+            if "is_admin" not in user_columns:
                 db.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0")
             if db.execute("SELECT COUNT(*) FROM users WHERE is_admin = 1").fetchone()[0] == 0:
                 first_user = db.execute("SELECT id FROM users ORDER BY id LIMIT 1").fetchone()
@@ -196,7 +197,8 @@ def create_app(test_config=None):
                     if db.execute("SELECT COUNT(*) FROM users").fetchone()[0] != 0:
                         db.rollback()
                         return redirect(url_for("login"))
-                    cursor = db.execute(                        "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+                    cursor = db.execute(
+                        "INSERT INTO users (username, password_hash) VALUES (?, ?)",
                         (username, generate_password_hash(password)),
                     )
                     db.commit()
@@ -295,7 +297,8 @@ def create_app(test_config=None):
     def user_edit(user_id):
         db = connect_db()
         try:
-            require_admin(db)            user = db.execute("SELECT id, username, is_admin, created_at FROM users WHERE id = ?", (user_id,)).fetchone()
+            require_admin(db)
+            user = db.execute("SELECT id, username, is_admin, created_at FROM users WHERE id = ?", (user_id,)).fetchone()
             if user is None: abort(404)
             if request.method == "POST":
                 username = request.form.get("username", "").strip()
@@ -394,7 +397,8 @@ def create_app(test_config=None):
                 name = request.form.get("name", "").strip()
                 category = request.form.get("category", "").strip()
                 link = request.form.get("affiliate_link", "").strip()
-                notes = request.form.get("notes", "").strip()                try:
+                notes = request.form.get("notes", "").strip()
+                try:
                     price_raw = request.form.get("price", "").strip().replace(",", ".")
                     commission_raw = request.form.get("commission", "").strip().replace("%", "").replace(",", ".")
                     price = float(price_raw) if price_raw else None
@@ -531,6 +535,7 @@ def create_app(test_config=None):
             db.close()
         flash("Status atualizado.", "success")
         return redirect(url_for("content", tipo=request.form.get("content_type", "story"), status=status))
+
     @app.post("/conteudo/<int:post_id>/excluir")
     @login_required
     def content_delete(post_id):

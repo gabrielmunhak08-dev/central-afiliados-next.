@@ -15,11 +15,11 @@
   <h2>{{ 'Seus Stories' if tipo == 'story' else 'Seus posts do Feed' }}</h2>
   <p class="muted">Escolha uma etapa para ver somente as publicações dela.</p>
   <div class="status-menu-grid">
-  {% for s, desc in [('Aguardando','Ainda não começaram'),('Fazendo','Em preparação'),('Pronto para postar','Finalizados para publicar'),('Publicado','Já publicados')] %}
+  {% for s, desc in [('Fazendo','Em preparação'),('Pronto para postar','Finalizados para publicar'),('Publicado','Já publicados')] %}
     <a class="status-menu-card" href="{{ url_for('content', tipo=tipo, status=s) }}"><strong>{{ s }}</strong><small>{{ desc }}</small><span>›</span></a>
   {% endfor %}
   </div>
-  <a class="button new-publication-button" href="{{ url_for('content', tipo=tipo, view='new') }}">＋ Nova publicação</a>
+  <div class="creation-options"><a class="button new-publication-button" href="{{ url_for('content', tipo=tipo, view='new') }}">＋ Criar manualmente</a><a class="button ai-create-button" href="{{ url_for('create_content_ai', tipo=tipo) }}">✦ Criar com IA</a></div>
 </section>
 {% endif %}
 {% if request.args.get("view") == "new" %}
@@ -50,7 +50,7 @@
 </section>
 {% endif %}
 {% if request.args.get("status") %}
-<section class="section-heading content-list-heading"><div><p class="eyebrow">SEU FLUXO DE TRABALHO</p><h2>{{ request.args.get("status") }}</h2><p class="muted">Publicações desta etapa.</p></div><a class="button button-small" href="{{ url_for('content', tipo=tipo, view='new') }}">＋ Nova publicação</a></section>
+<section class="section-heading content-list-heading"><div><p class="eyebrow">SEU FLUXO DE TRABALHO</p><h2>{{ request.args.get("status") }}</h2><p class="muted">Publicações desta etapa.</p></div><div class="creation-options compact"><a class="button button-small button-quiet" href="{{ url_for('content', tipo=tipo, view='new') }}">＋ Manual</a><a class="button button-small ai-create-button" href="{{ url_for('create_content_ai', tipo=tipo) }}">✦ Criar com IA</a></div></section>
 {% set visible_posts = posts|selectattr('content_type', 'equalto', tipo)|selectattr('status', 'equalto', request.args.get('status'))|list %}
 {% if visible_posts %}
 <div class="content-list">

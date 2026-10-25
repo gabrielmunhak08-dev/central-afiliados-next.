@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Criar com IA · Central de Afiliados{% endblock %}
+{% block content %}
+<div class="content-nav-row"><a class="back-button" href="{{ url_for('content', tipo=tipo) }}">← Voltar ao conteúdo</a><a class="home-content-link" href="{{ url_for('dashboard') }}">Central principal</a></div>
+<section class="section-heading"><div><p class="eyebrow">CRIAÇÃO ASSISTIDA</p><h1>Criar com <span class="accent">IA</span></h1><p class="muted">Escolha um produto. O Gemini usará as fotos e as regras que você salvou nas Configurações de conteúdo.</p></div></section>
+<div class="settings-warning"><strong>Antes de gerar:</strong> a API do Gemini precisa estar configurada no servidor. A imagem gerada ficará em Aguardando aprovação; ela não será publicada automaticamente.</div>
+<form class="form-card settings-form" method="post" action="{{ url_for('create_content_ai') }}">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <label>Tipo de publicação
+    <select name="content_type" required><option value="story" {{ 'selected' if tipo == 'story' else '' }}>Stories · vertical 9:16</option><option value="post" {{ 'selected' if tipo == 'post' else '' }}>Feed / Post · vertical 3:4</option></select>
+  </label>
+  <label>Produto cadastrado
+    <select name="product_id" required><option value="">Selecione o produto</option>{% for p in products %}<option value="{{ p.id }}">{{ p.name }}{% if p.price is not none %} · R$ {{ '%.2f'|format(p.price) }}{% endif %}</option>{% endfor %}</select>
+  </label>
+  <label>Pedido de ajuste (opcional)
+    <textarea name="revision" rows="3" placeholder="Ex.: fundo mais claro, preço maior, trocar o risco por um traço fino..."></textarea>
+    <small>Essas instruções valem para esta criação. Para mudar o padrão das próximas, use Configurações de conteúdo.</small>
+  </label>
+  <div class="settings-checklist"><strong>Regras aplicadas</strong><p>Usar fotos cadastradas; respeitar o formato; nunca divulgar comissão; não inventar preço, desconto ou características; aguardar sua aprovação antes de publicar.</p></div>
+  <div class="form-actions"><button class="button" type="submit">Gerar imagem com Gemini</button><a class="button button-quiet" href="{{ url_for('content_settings') }}">Editar padrões</a></div>
+</form>
+{% endblock %}

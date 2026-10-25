@@ -97,8 +97,7 @@ def create_app(test_config=None):
                 );
             """)
             # Migração segura para usuários e publicações, sem apagar dados existentes.
-            user_columns = {row[1] for row in db.execute("PRAGMA table_info(users)").fetchall()}
-            if "is_admin" not in user_columns:
+            user_columns = {row[1] for row in db.execute("PRAGMA table_info(users)").fetchall()}            if "is_admin" not in user_columns:
                 db.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0")
             if db.execute("SELECT COUNT(*) FROM users WHERE is_admin = 1").fetchone()[0] == 0:
                 first_user = db.execute("SELECT id FROM users ORDER BY id LIMIT 1").fetchone()
@@ -197,8 +196,7 @@ def create_app(test_config=None):
                     if db.execute("SELECT COUNT(*) FROM users").fetchone()[0] != 0:
                         db.rollback()
                         return redirect(url_for("login"))
-                    cursor = db.execute(
-                        "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+                    cursor = db.execute(                        "INSERT INTO users (username, password_hash) VALUES (?, ?)",
                         (username, generate_password_hash(password)),
                     )
                     db.commit()
@@ -297,8 +295,7 @@ def create_app(test_config=None):
     def user_edit(user_id):
         db = connect_db()
         try:
-            require_admin(db)
-            user = db.execute("SELECT id, username, is_admin, created_at FROM users WHERE id = ?", (user_id,)).fetchone()
+            require_admin(db)            user = db.execute("SELECT id, username, is_admin, created_at FROM users WHERE id = ?", (user_id,)).fetchone()
             if user is None: abort(404)
             if request.method == "POST":
                 username = request.form.get("username", "").strip()
@@ -397,8 +394,7 @@ def create_app(test_config=None):
                 name = request.form.get("name", "").strip()
                 category = request.form.get("category", "").strip()
                 link = request.form.get("affiliate_link", "").strip()
-                notes = request.form.get("notes", "").strip()
-                try:
+                notes = request.form.get("notes", "").strip()                try:
                     price_raw = request.form.get("price", "").strip().replace(",", ".")
                     commission_raw = request.form.get("commission", "").strip().replace("%", "").replace(",", ".")
                     price = float(price_raw) if price_raw else None
@@ -481,6 +477,43 @@ def create_app(test_config=None):
             db.close()
         return render_template("content.html", products=products_data, posts=posts_data, tipo=request.args.get("tipo", "story"))
 
+
+    DEFAULT_CONTENT_SETTINGS = {
+        "general_rules": "Use somente informações verdadeiras cadastradas no produto. Nunca invente características, descontos, avaliações, garantias ou benefícios. Nunca mencione comissão, percentual de comissão, ganhos do afiliado ou informações internas.",
+        "visual_style": "Visual profissional, moderno, limpo e comercial; priorize a foto real do produto, boa legibilidade e aparência premium.",
+        "colors": "Preto, branco e laranja; manter contraste alto e identidade visual consistente.",
+        "story_rules": "Formato vertical 9:16. Usar a foto real do produto como referência. Deixar uma área livre e visível para adicionar o link do produto depois. Não desenhar QR code nem inventar link.",
+        "feed_rules": "Formato vertical 3:4. Usar a foto real do produto como referência. Incluir a chamada: Esse e muitos outros no link no perfil.",
+        "price_rules": "Exibir o preço cadastrado de forma legível, sem inventar descontos ou preço anterior. Se o preço estiver ausente, não inventar valor e avisar antes de gerar.",
+        "text_rules": "Português do Brasil, texto curto, correto e fácil de ler. Não acrescentar informações que não estejam no cadastro ou nas instruções salvas.",
+        "extra_instructions": ""
+    }
+
+    @app.route("/configuracoes-conteudo", methods=["GET", "POST"])
+    @login_required
+    def content_settings():
+        db = connect_db()
+        try:
+            saved = {row["key"]: row["value"] for row in db.execute("SELECT key, value FROM settings").fetchall()}
+            values = {key: saved.get(key, value) for key, value in DEFAULT_CONTENT_SETTINGS.items()}
+            if request.method == "POST":
+                values = {}
+                for key, default in DEFAULT_CONTENT_SETTINGS.items():
+                    values[key] = request.form.get(key, "").strip()
+                    if not values[key] and key != "extra_instructions":
+                        values[key] = default
+                for key, value in values.items():
+                    db.execute(
+                        "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                        (key, value),
+                    )
+                db.commit()
+                flash("Preferências de conteúdo salvas. As próximas publicações usarão estas regras.", "success")
+                return redirect(url_for("content_settings"))
+            return render_template("content_settings.html", settings=values)
+        finally:
+            db.close()
+
     @app.post("/conteudo/<int:post_id>/status")
     @login_required
     def content_status(post_id):
@@ -498,7 +531,6 @@ def create_app(test_config=None):
             db.close()
         flash("Status atualizado.", "success")
         return redirect(url_for("content", tipo=request.form.get("content_type", "story"), status=status))
-
     @app.post("/conteudo/<int:post_id>/excluir")
     @login_required
     def content_delete(post_id):

@@ -15,6 +15,7 @@
   <h2>{{ 'Seus Stories' if tipo == 'story' else 'Seus posts do Feed' }}</h2>
   <p class="muted">Escolha uma etapa para ver somente as publicações dela.</p>
   <div class="status-menu-grid">
+  <a class="status-menu-card approval-card" href="{{ url_for('content', tipo=tipo, status='Aguardando') }}"><strong>Aprovar criações</strong><small>Revisar artes geradas ou aguardando aprovação</small><span>›</span></a>
   {% for s, desc in [('Fazendo','Em preparação'),('Pronto para postar','Finalizados para publicar'),('Publicado','Já publicados')] %}
     <a class="status-menu-card" href="{{ url_for('content', tipo=tipo, status=s) }}"><strong>{{ s }}</strong><small>{{ desc }}</small><span>›</span></a>
   {% endfor %}

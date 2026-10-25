@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Configurações de conteúdo · Central de Afiliados{% endblock %}
+{% block content %}
+<div class="content-nav-row">
+  <a class="back-button" href="{{ url_for('content', tipo='story') }}">← Voltar ao conteúdo</a>
+  <a class="home-content-link" href="{{ url_for('dashboard') }}">Central principal</a>
+</div>
+<section class="section-heading">
+  <div><p class="eyebrow">PADRÕES SALVOS</p><h1>Configurações de <span class="accent">conteúdo</span></h1><p class="muted">Edite estas regras uma vez. A Central salva a última versão e ela será usada como referência nas próximas criações.</p></div>
+</section>
+<div class="settings-warning"><strong>Importante:</strong> estas preferências ficam salvas no banco da Central. A geração real de imagens pelo Gemini ainda precisa ser conectada; esta tela não chama a IA sozinha.</div>
+<form class="form-card settings-form" method="post" action="{{ url_for('content_settings') }}">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <h2>Regras gerais da IA</h2>
+  <label>Instruções que valem para todas as publicações
+    <textarea name="general_rules" rows="5" required>{{ settings.general_rules }}</textarea>
+  </label>
+  <label>Estilo visual padrão
+    <textarea name="visual_style" rows="3" required>{{ settings.visual_style }}</textarea>
+  </label>
+  <label>Cores e identidade visual
+    <input name="colors" value="{{ settings.colors }}" required>
+  </label>
+  <label>Regras de texto
+    <textarea name="text_rules" rows="3" required>{{ settings.text_rules }}</textarea>
+  </label>
+  <label>Regras para preço
+    <textarea name="price_rules" rows="3" required>{{ settings.price_rules }}</textarea>
+  </label>
+  <h2>Stories</h2>
+  <label>Padrão para Stories
+    <textarea name="story_rules" rows="4" required>{{ settings.story_rules }}</textarea>
+  </label>
+  <h2>Feed / Posts</h2>
+  <label>Padrão para Feed
+    <textarea name="feed_rules" rows="4" required>{{ settings.feed_rules }}</textarea>
+  </label>
+  <h2>Instruções extras</h2>
+  <label>Observações adicionais que você pode alterar quando quiser
+    <textarea name="extra_instructions" rows="4" placeholder="Ex.: trocar o risco por um traço fino, deixar o preço maior, usar fundo mais claro...">{{ settings.extra_instructions }}</textarea>
+  </label>
+  <div class="settings-checklist">
+    <strong>Regras de segurança já consideradas</strong>
+    <p>Não divulgar comissão ou percentual de ganhos. Não inventar preço, desconto, características, links ou promessas. Usar o tipo escolhido (Stories ou Feed) para definir o formato. Priorizar as fotos reais do produto.</p>
+  </div>
+  <div class="form-actions"><button class="button" type="submit">Salvar preferências</button><a class="button button-quiet" href="{{ url_for('content', tipo='story', view='new') }}">Ir para nova publicação</a></div>
+</form>
+{% endblock %}

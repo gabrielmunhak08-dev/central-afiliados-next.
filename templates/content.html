@@ -91,6 +91,18 @@
 </div>
 {% else %}<div class="empty-state">Ainda não há publicações com esse status nesta área.</div>{% endif %}
 {% endif %}
+<style>
+.product-search-results{display:grid;gap:8px;margin-top:10px}
+.product-search-option{display:flex;align-items:center;gap:12px;width:100%;padding:10px;text-align:left;border:1px solid var(--border,#30343b);border-radius:12px;background:var(--card,#15181d);color:inherit;cursor:pointer}
+.product-search-option[hidden]{display:none}
+.product-search-option.selected{border-color:var(--accent,#ff6b00);box-shadow:0 0 0 1px var(--accent,#ff6b00)}
+.product-search-thumb{width:54px;height:54px;flex:0 0 54px;object-fit:contain;border-radius:8px;background:#fff}
+.product-search-no-image{display:grid;place-items:center;font-size:24px}
+.product-search-option-text{display:grid;gap:4px;min-width:0}
+.product-search-option-text strong{overflow-wrap:anywhere}
+.product-search-option-text small{opacity:.72}
+.product-search-empty{padding:12px}
+</style>
 <script>
 const productIdField = document.getElementById('content-product');
 const productSearch = document.getElementById('product-search');

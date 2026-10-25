@@ -2,9 +2,11 @@
 {% block title %}Usuários · Central de Afiliados{% endblock %}
 {% block content %}
 <section class="section-heading">
-  <p class="eyebrow">ADMINISTRAÇÃO</p>
-  <h1>Gerenciar <span class="accent">usuários.</span></h1>
-  <p class="muted">Cada pessoa usa seu próprio login. As contas compartilham os mesmos produtos e publicações.</p>
+  <div>
+    <p class="eyebrow">ADMINISTRAÇÃO</p>
+    <h1>Gerenciar <span class="accent">usuários.</span></h1>
+    <p class="muted">Cada pessoa usa seu próprio login. As contas compartilham os mesmos produtos e publicações.</p>
+  </div>
   <a class="button button-quiet" href="{{ url_for('dashboard') }}">← Voltar ao painel</a>
 </section>
 <section class="form-card">
@@ -20,13 +22,23 @@
     <button class="button" type="submit">Criar usuário</button>
   </form>
 </section>
-<section class="section-heading"><div><h2>Contas cadastradas</h2></div></section>
-<div class="module-grid">
+<section class="section-heading"><div><h2>Contas cadastradas</h2><p class="muted">A senha atual nunca é exibida; você pode redefini-la em Editar.</p></div></section>
+<div class="module-grid user-grid">
 {% for user in users %}
-  <article class="module-card">
+  <article class="module-card user-card">
     <h3>{{ user.username }}</h3>
     <p>{{ 'Administrador' if user.is_admin else 'Usuário padrão' }}</p>
     <p class="muted">Criado em {{ user.created_at }}</p>
+    <div class="user-actions">
+      <a class="button button-small button-quiet" href="{{ url_for('user_detail', user_id=user.id) }}">Visualizar</a>
+      <a class="button button-small" href="{{ url_for('user_edit', user_id=user.id) }}">Editar</a>
+      {% if user.id != g.user.id %}
+      <form method="post" action="{{ url_for('user_delete', user_id=user.id) }}" onsubmit="return confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.');">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <button class="button button-small button-danger" type="submit">Excluir</button>
+      </form>
+      {% endif %}
+    </div>
   </article>
 {% endfor %}
 </div>

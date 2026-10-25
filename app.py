@@ -389,6 +389,90 @@ def create_app(test_config=None):
             db.close()
         return render_template("products.html", products=products_data, q=q)
 
+
+    @app.route("/produtos/importar-link", methods=["POST"])
+    @login_required
+    def import_product_link():
+        from html.parser import HTMLParser
+        from html import unescape
+        from urllib.parse import urlparse
+        import re
+
+        class MetaParser(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.meta = {}
+                self.title_parts = []
+                self.in_title = False
+            def handle_starttag(self, tag, attrs):
+                attrs = dict(attrs)
+                if tag.lower() == "meta":
+                    key = (attrs.get("property") or attrs.get("name") or "").lower()
+                    value = attrs.get("content", "").strip()
+                    if key and value:
+                        self.meta[key] = value
+                elif tag.lower() == "title":
+                    self.in_title = True
+            def handle_endtag(self, tag):
+                if tag.lower() == "title":
+                    self.in_title = False
+            def handle_data(self, data):
+                if self.in_title:
+                    self.title_parts.append(data)
+
+        link = request.form.get("affiliate_link", "").strip()
+        draft = {"name": "", "category": "", "price": "", "affiliate_link": link, "commission": "", "notes": ""}
+        parsed = urlparse(link)
+        host = (parsed.hostname or "").lower()
+        allowed_hosts = ("shopee.com.br", "shope.ee")
+        if parsed.scheme != "https" or not any(host == h or host.endswith("." + h) for h in allowed_hosts):
+            flash("Cole um link HTTPS válido da Shopee. O link de afiliado será preservado exatamente como você enviou.", "error")
+            return render_template("product_form.html", product=None, product_photos=[], draft=draft)
+
+        try:
+            req = urllib.request.Request(link, headers={"User-Agent": "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 Chrome/130 Mobile Safari/537.36"})
+            with urllib.request.urlopen(req, timeout=12) as response:
+                final_host = (urlparse(response.geturl()).hostname or "").lower()
+                if not any(final_host == h or final_host.endswith("." + h) for h in allowed_hosts):
+                    raise ValueError("redirect host not allowed")
+                html = response.read(2_000_000).decode("utf-8", errors="replace")
+            parser = MetaParser()
+            parser.feed(html)
+            title = parser.meta.get("og:title") or " ".join(parser.title_parts).strip()
+            description = parser.meta.get("og:description") or parser.meta.get("description", "")
+            if title:
+                draft["name"] = re.sub(r"\s*[\-|]\s*Shopee.*$", "", unescape(title), flags=re.I)[:180].strip()
+            if description:
+                draft["notes"] = unescape(description)[:3000].strip()
+
+            visible_text = unescape(re.sub(r"<[^>]+>", " ", html))
+            price_match = re.search(r"(?:R\$\s*|BRL\s*)(\d[\d.]*,\d{2})", " ".join([title, description, visible_text[:150000]]), re.I)
+            if price_match:
+                draft["price"] = price_match.group(1)
+
+            commission_match = re.search(
+                r"(?:comiss[aã]o|taxa\s+de\s+comiss[aã]o|commission)[^%]{0,100}?(\d{1,2}(?:[.,]\d{1,2})?)\s*%",
+                visible_text[:150000], re.I
+            )
+            if commission_match:
+                try:
+                    pct = float(commission_match.group(1).replace(",", "."))
+                    if 0 < pct <= 100:
+                        draft["commission"] = str(pct).rstrip("0").rstrip(".")
+                except ValueError:
+                    pass
+
+            if draft["name"] or draft["notes"] or draft["price"] or draft["commission"]:
+                if not draft["commission"]:
+                    flash("Importei os dados que a Shopee deixou visíveis. Não encontrei uma taxa de comissão verificável; confira-a na Shopee e preencha se necessário.", "success")
+                else:
+                    flash("Dados importados, incluindo a comissão encontrada na página. Confira tudo antes de salvar.", "success")
+            else:
+                flash("A Shopee não liberou dados suficientes para importar automaticamente. O link foi mantido; preencha os campos e confira a comissão.", "error")
+        except Exception:
+            flash("Não consegui ler automaticamente a página da Shopee (ela pode bloquear acessos automáticos). Seu link de afiliado foi preservado; preencha ou confira os dados manualmente.", "error")
+        return render_template("product_form.html", product=None, product_photos=[], draft=draft)
+
     @app.route("/produtos/novo", methods=["GET", "POST"])
     @app.route("/produtos/<int:product_id>/editar", methods=["GET", "POST"])
     @login_required

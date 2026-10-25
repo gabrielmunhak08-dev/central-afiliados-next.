@@ -148,3 +148,17 @@ footer{text-align:center;color:#727c89;font-size:.78rem;padding:22px;border-top:
 .user-actions form{margin:0}
 .user-actions .button{margin-top:0}
 .user-detail-card p{overflow-wrap:anywhere}
+
+
+/* Configurações persistentes para criação de conteúdo */
+.content-settings-link-row{display:flex;justify-content:flex-end;margin:-12px 0 14px}
+.settings-form{max-width:820px}
+.settings-form h2{margin:8px 0 2px;padding-top:10px;border-top:1px solid var(--line)}
+.settings-form textarea{width:100%;min-width:0;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:#0b0d10;color:var(--text);font:inherit;resize:vertical;line-height:1.55}
+.settings-form input{font:inherit}
+.settings-warning,.settings-checklist{padding:14px;border:1px solid #49301f;border-radius:12px;background:#191714;color:#e6d7ca;line-height:1.6;margin:14px 0}
+.settings-checklist{border-color:var(--line);background:#0b0d10;color:var(--muted)}
+.settings-checklist strong{color:var(--text)}
+.settings-checklist p{margin:7px 0 0}
+.settings-form .form-actions{margin-top:8px}
+@media(max-width:560px){.content-settings-link-row{justify-content:stretch}.content-settings-link-row .button{width:100%}.settings-form{padding:14px}}

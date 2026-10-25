@@ -397,28 +397,87 @@ def create_app(test_config=None):
         from html import unescape
         from urllib.parse import urlparse
         import re
+        import json
 
         class MetaParser(HTMLParser):
             def __init__(self):
                 super().__init__()
                 self.meta = {}
                 self.title_parts = []
-                self.in_title = False
+                self.scripts = []
+                self._in_title = False
+                self._script_type = ""
+                self._script_parts = []
             def handle_starttag(self, tag, attrs):
                 attrs = dict(attrs)
-                if tag.lower() == "meta":
+                tag = tag.lower()
+                if tag == "meta":
                     key = (attrs.get("property") or attrs.get("name") or "").lower()
                     value = attrs.get("content", "").strip()
                     if key and value:
                         self.meta[key] = value
-                elif tag.lower() == "title":
-                    self.in_title = True
+                elif tag == "title":
+                    self._in_title = True
+                elif tag == "script":
+                    self._script_type = attrs.get("type", "").lower()
+                    self._script_parts = []
             def handle_endtag(self, tag):
-                if tag.lower() == "title":
-                    self.in_title = False
+                tag = tag.lower()
+                if tag == "title":
+                    self._in_title = False
+                elif tag == "script":
+                    if self._script_parts:
+                        self.scripts.append((self._script_type, "".join(self._script_parts)))
+                    self._script_type = ""
+                    self._script_parts = []
             def handle_data(self, data):
-                if self.in_title:
+                if self._in_title:
                     self.title_parts.append(data)
+                if self._script_type:
+                    self._script_parts.append(data)
+
+        def clean_text(value, limit=3000):
+            value = unescape(str(value or ""))
+            value = re.sub(r"<[^>]+>", " ", value)
+            return re.sub(r"\s+", " ", value).strip()[:limit]
+
+        def looks_generic(value):
+            low = clean_text(value, 500).lower()
+            generic_phrases = (
+                "shopee brasil", "ofertas incríveis", "ofertas incriveis",
+                "melhores preços do mercado", "melhores precos do mercado",
+                "compre em menos de 30 segundos", "garantia shopee",
+            )
+            return not low or any(phrase in low for phrase in generic_phrases) or low == "shopee"
+
+        def find_product_data(value, found):
+            if isinstance(value, dict):
+                kind = value.get("@type", "")
+                kinds = kind if isinstance(kind, list) else [kind]
+                if any(str(k).lower() == "product" for k in kinds):
+                    if value.get("name") and not found.get("name"):
+                        found["name"] = clean_text(value["name"], 180)
+                    if value.get("description") and not found.get("notes"):
+                        found["notes"] = clean_text(value["description"])
+                    if value.get("category") and not found.get("category"):
+                        category = value["category"]
+                        found["category"] = clean_text(category if isinstance(category, str) else "", 80)
+                    offers = value.get("offers", {})
+                    offers = offers if isinstance(offers, list) else [offers]
+                    for offer in offers:
+                        if isinstance(offer, dict) and offer.get("price") is not None and not found.get("price"):
+                            price = str(offer["price"]).replace(",", ".")
+                            if re.fullmatch(r"\d+(?:\.\d{1,2})?", price):
+                                try:
+                                    if float(price) > 0:
+                                        found["price"] = price.replace(".", ",")
+                                except ValueError:
+                                    pass
+                for child in value.values():
+                    find_product_data(child, found)
+            elif isinstance(value, list):
+                for child in value:
+                    find_product_data(child, found)
 
         link = request.form.get("affiliate_link", "").strip()
         draft = {"name": "", "category": "", "price": "", "affiliate_link": link, "commission": "", "notes": ""}
@@ -430,29 +489,57 @@ def create_app(test_config=None):
             return render_template("product_form.html", product=None, product_photos=[], draft=draft)
 
         try:
-            req = urllib.request.Request(link, headers={"User-Agent": "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 Chrome/130 Mobile Safari/537.36"})
-            with urllib.request.urlopen(req, timeout=12) as response:
-                final_host = (urlparse(response.geturl()).hostname or "").lower()
+            req = urllib.request.Request(
+                link,
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Linux; Android 15; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36",
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+                    "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+                    "Cache-Control": "no-cache",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=15) as response:
+                final_url = response.geturl()
+                final_host = (urlparse(final_url).hostname or "").lower()
                 if not any(final_host == h or final_host.endswith("." + h) for h in allowed_hosts):
                     raise ValueError("redirect host not allowed")
-                html = response.read(2_000_000).decode("utf-8", errors="replace")
+                html = response.read(3_000_000).decode("utf-8", errors="replace")
+
             parser = MetaParser()
             parser.feed(html)
-            title = parser.meta.get("og:title") or " ".join(parser.title_parts).strip()
-            description = parser.meta.get("og:description") or parser.meta.get("description", "")
+            title = parser.meta.get("og:title") or parser.meta.get("twitter:title") or " ".join(parser.title_parts).strip()
+            description = parser.meta.get("og:description") or parser.meta.get("twitter:description") or parser.meta.get("description", "")
             if title:
-                draft["name"] = re.sub(r"\s*[\-|]\s*Shopee.*$", "", unescape(title), flags=re.I)[:180].strip()
-            if description:
-                draft["notes"] = unescape(description)[:3000].strip()
+                title = re.sub(r"\s*[\-|]\s*Shopee.*$", "", clean_text(title, 500), flags=re.I).strip()
+                if not looks_generic(title):
+                    draft["name"] = title[:180]
+            if description and not looks_generic(description):
+                draft["notes"] = clean_text(description)
 
-            visible_text = unescape(re.sub(r"<[^>]+>", " ", html))
-            price_match = re.search(r"(?:R\$\s*|BRL\s*)(\d[\d.]*,\d{2})", " ".join([title, description, visible_text[:150000]]), re.I)
-            if price_match:
-                draft["price"] = price_match.group(1)
+            # Algumas páginas entregam os dados do produto em JSON-LD, mesmo quando
+            # o HTML visível é mínimo. Só usamos valores explicitamente presentes.
+            structured = {"name": "", "category": "", "price": "", "notes": ""}
+            for script_type, script_text in parser.scripts:
+                if "ld+json" in script_type or script_text.lstrip().startswith(("{", "[")):
+                    try:
+                        find_product_data(json.loads(script_text), structured)
+                    except (ValueError, TypeError):
+                        pass
+            for key in ("name", "category", "price", "notes"):
+                if structured.get(key) and (key != "name" or looks_generic(draft["name"])):
+                    draft[key] = structured[key]
+
+            # Fallback conservador: extrai preço apenas de texto com formato monetário.
+            # Não tenta adivinhar valores nem a comissão a partir de conteúdo genérico.
+            visible_text = clean_text(re.sub(r"<[^>]+>", " ", html), 150000)
+            if not draft["price"]:
+                price_match = re.search(r"(?:R\$\s*|BRL\s*)(\d[\d.]*,\d{2})", visible_text, re.I)
+                if price_match:
+                    draft["price"] = price_match.group(1)
 
             commission_match = re.search(
                 r"(?:comiss[aã]o|taxa\s+de\s+comiss[aã]o|commission)[^%]{0,100}?(\d{1,2}(?:[.,]\d{1,2})?)\s*%",
-                visible_text[:150000], re.I
+                visible_text, re.I
             )
             if commission_match:
                 try:
@@ -462,15 +549,20 @@ def create_app(test_config=None):
                 except ValueError:
                     pass
 
-            if draft["name"] or draft["notes"] or draft["price"] or draft["commission"]:
-                if not draft["commission"]:
-                    flash("Importei os dados que a Shopee deixou visíveis. Não encontrei uma taxa de comissão verificável; confira-a na Shopee e preencha se necessário.", "success")
+            imported = [draft[k] for k in ("name", "category", "price", "notes", "commission") if draft[k]]
+            if imported:
+                if not draft["name"]:
+                    flash("A Shopee não revelou um nome de produto confiável. Não preenchi o título genérico da Shopee; digite o nome e confira os outros campos.", "warning")
+                elif not draft["price"]:
+                    flash("Encontrei alguns dados, mas o preço não ficou disponível no HTML recebido. Confira na página do produto antes de salvar.", "warning")
                 else:
-                    flash("Dados importados, incluindo a comissão encontrada na página. Confira tudo antes de salvar.", "success")
+                    flash("Dados encontrados na página. Confira nome, preço e descrição antes de salvar; a comissão só é preenchida se estiver explícita.", "success")
+                if not draft["commission"]:
+                    flash("A taxa de comissão não apareceu de forma verificável; consulte a área de afiliados da Shopee e preencha manualmente.", "warning")
             else:
-                flash("A Shopee não liberou dados suficientes para importar automaticamente. O link foi mantido; preencha os campos e confira a comissão.", "error")
+                flash("A Shopee bloqueou ou não incluiu os dados do produto no HTML recebido. O link de afiliado foi preservado; não inventei nome, preço nem comissão. Preencha manualmente ou tente um link direto do produto.", "error")
         except Exception:
-            flash("Não consegui ler automaticamente a página da Shopee (ela pode bloquear acessos automáticos). Seu link de afiliado foi preservado; preencha ou confira os dados manualmente.", "error")
+            flash("Não consegui ler os dados desta página da Shopee. O link de afiliado foi preservado; a Shopee pode exigir JavaScript ou bloquear acesso automático. Tente um link direto do produto e confira os campos manualmente.", "error")
         return render_template("product_form.html", product=None, product_photos=[], draft=draft)
 
     @app.route("/produtos/novo", methods=["GET", "POST"])

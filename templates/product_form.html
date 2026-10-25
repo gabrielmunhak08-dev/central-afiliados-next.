@@ -1,21 +1,29 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Editar produto' if product else 'Novo produto' }} · Central<script>
+{% block title %}{{ 'Editar produto' if product else 'Novo produto' }} · Central{% endblock %}
+{% block content %}
+<script>
 function testAffiliateLink() {
   const field = document.getElementById("affiliate-link");
   const value = (field.value || "").trim();
+  if (!value) {
+    alert("Cole seu link de afiliado primeiro.");
+    return;
+  }
   try {
     const parsed = new URL(value);
     if (parsed.protocol !== "https:" || !parsed.hostname) {
       alert("Cole um link HTTPS válido antes de testar.");
       return;
     }
-    window.open(parsed.href, "_blank", "noopener,noreferrer");
+    const opened = window.open(parsed.href, "_blank");
+    if (!opened) {
+      window.location.href = parsed.href;
+    }
   } catch (_) {
     alert("Cole um link válido antes de testar.");
   }
 }
 </script>
-{% endblock %}
 {% block content %}
 <section class="section-heading"><p class="eyebrow">CATÁLOGO</p><h1>{{ 'Editar' if product else 'Cadastrar' }} <span class="accent">produto.</span></h1><p class="muted">Mantenha o link de afiliado separado do nome.</p><a class="button button-quiet" href="{{ url_for('products') }}">← Voltar ao catálogo</a></section>
 {% if not product %}

@@ -162,3 +162,13 @@ footer{text-align:center;color:#727c89;font-size:.78rem;padding:22px;border-top:
 .settings-checklist p{margin:7px 0 0}
 .settings-form .form-actions{margin-top:8px}
 @media(max-width:560px){.content-settings-link-row{justify-content:stretch}.content-settings-link-row .button{width:100%}.settings-form{padding:14px}}
+
+
+/* Opções de criação manual e por IA */
+.creation-options{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.creation-options .button{flex:1;min-width:170px;text-align:center}
+.creation-options.compact{margin:0;justify-content:flex-end}
+.creation-options.compact .button{flex:0 1 auto;min-width:0}
+.ai-create-button{background:linear-gradient(135deg,#ff7a18,#ff5a00);color:#fff;border:1px solid #ff8a36}
+.approval-card{border-color:#70401e}
+@media(max-width:560px){.creation-options{flex-direction:column}.creation-options .button{width:100%}.creation-options.compact{flex-direction:row}.creation-options.compact .button{width:auto}}

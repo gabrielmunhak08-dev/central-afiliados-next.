@@ -138,3 +138,13 @@ footer{text-align:center;color:#727c89;font-size:.78rem;padding:22px;border-top:
 .form-actions .button{margin-top:0}
 .content-delete-row{display:flex;justify-content:flex-end;margin:12px 0 4px}
 .content-delete-row form{margin:0}
+
+
+/* Gerenciamento de usuários */
+.user-grid{margin-top:14px}
+.user-card{min-width:0}
+.user-card h3{overflow-wrap:anywhere}
+.user-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:16px}
+.user-actions form{margin:0}
+.user-actions .button{margin-top:0}
+.user-detail-card p{overflow-wrap:anywhere}

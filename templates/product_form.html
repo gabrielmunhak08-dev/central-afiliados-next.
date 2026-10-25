@@ -24,7 +24,6 @@ function testAffiliateLink() {
   }
 }
 </script>
-{% block content %}
 <section class="section-heading"><p class="eyebrow">CATÁLOGO</p><h1>{{ 'Editar' if product else 'Cadastrar' }} <span class="accent">produto.</span></h1><p class="muted">Mantenha o link de afiliado separado do nome.</p><a class="button button-quiet" href="{{ url_for('products') }}">← Voltar ao catálogo</a></section>
 {% if not product %}
 <form class="form-card" method="post" action="{{ url_for('import_product_link') }}">

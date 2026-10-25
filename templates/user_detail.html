@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Detalhes do usuário · Central de Afiliados{% endblock %}
+{% block content %}
+<section class="section-heading">
+  <div><p class="eyebrow">ADMINISTRAÇÃO</p><h1>Detalhes do <span class="accent">usuário.</span></h1></div>
+  <a class="button button-quiet" href="{{ url_for('users_admin') }}">← Voltar aos usuários</a>
+</section>
+<section class="form-card user-detail-card">
+  <h2>{{ user.username }}</h2>
+  <p><strong>ID:</strong> {{ user.id }}</p>
+  <p><strong>Tipo de conta:</strong> {{ 'Administrador' if user.is_admin else 'Usuário padrão' }}</p>
+  <p><strong>Criado em:</strong> {{ user.created_at }}</p>
+  <p class="muted">A senha não pode ser visualizada, pois é armazenada como um hash protegido. Se necessário, use Editar para definir uma nova senha.</p>
+  <div class="user-actions">
+    <a class="button" href="{{ url_for('user_edit', user_id=user.id) }}">Editar usuário</a>
+    <a class="button button-quiet" href="{{ url_for('users_admin') }}">Voltar</a>
+  </div>
+</section>
+{% endblock %}

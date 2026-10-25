@@ -5,6 +5,7 @@
 <section class="section-heading">
   <div><p class="eyebrow">INSTAGRAM</p><h1>Central de <span class="accent">conteúdo</span></h1><p class="muted">Prepare, organize e publique manualmente. Stories e posts ficam separados.</p></div>
 </section>
+<div class="content-settings-link-row"><a class="button button-small button-quiet" href="{{ url_for('content_settings') }}">⚙ Configurações de conteúdo / IA</a></div>
 <nav class="content-tabs">
   <a class="{{ 'active' if tipo == 'story' else '' }}" href="{{ url_for('content', tipo='story') }}">▣ Stories</a>
   <a class="{{ 'active' if tipo == 'post' else '' }}" href="{{ url_for('content', tipo='post') }}">▤ Feed / Posts</a>
@@ -24,6 +25,7 @@
 {% if request.args.get("view") == "new" %}
 <section class="content-create">
   <h2>Preparar publicação</h2>
+  <p class="muted">As regras salvas em <a class="text-link" href="{{ url_for('content_settings') }}">Configurações de conteúdo</a> serão usadas como padrão quando a geração com IA for conectada. Por enquanto, esta etapa salva o rascunho e permite anexar uma imagem pronta.</p>
   {% if products %}
   <form class="form-card" method="post" enctype="multipart/form-data" action="{{ url_for('content') }}">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">

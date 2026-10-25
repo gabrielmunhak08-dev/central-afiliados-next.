@@ -31,13 +31,22 @@
   <form class="form-card" method="post" enctype="multipart/form-data" action="{{ url_for('content') }}">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="content_type" value="{{ tipo }}">
-    <label>Produto cadastrado
-      <select name="product_id" id="content-product" required>
-        <option value="">Escolha ou pesquise um produto</option>
-        {% for p in products %}<option value="{{ p.id }}" data-link="{{ p.affiliate_link|e }}" data-notes="{{ p.notes|e }}" data-name="{{ p.name|e }}">{{ p.name }}{% if p.category %} · {{ p.category }}{% endif %}</option>{% endfor %}
-      </select>
+    <label>Pesquisar produto salvo
+      <input type="search" id="product-search" autocomplete="off" placeholder="Digite o nome do produto..." aria-describedby="product-search-help">
+      <small id="product-search-help">Digite algumas letras e toque no produto correto. A foto aparece ao lado.</small>
     </label>
-    <div id="product-details" class="product-details muted">Escolha um produto para ver os dados salvos.</div>
+    <input type="hidden" name="product_id" id="content-product" required>
+    <div id="product-search-results" class="product-search-results" role="listbox" aria-label="Produtos encontrados">
+      {% for p in products %}
+      <button type="button" class="product-search-option" role="option"
+        data-id="{{ p.id }}" data-link="{{ p.affiliate_link|e }}" data-notes="{{ p.notes|e }}" data-name="{{ p.name|e }}"
+        data-category="{{ p.category|e }}" data-image="{{ url_for('uploaded_file', filename=p.image_filename) if p.image_filename else '' }}">
+        {% if p.image_filename %}<img class="product-search-thumb" src="{{ url_for('uploaded_file', filename=p.image_filename) }}" alt="" loading="lazy">{% else %}<span class="product-search-thumb product-search-no-image">📦</span>{% endif %}
+        <span class="product-search-option-text"><strong>{{ p.name }}</strong><small>{{ p.category or 'Sem categoria' }}</small></span>
+      </button>
+      {% endfor %}
+    </div>
+    <div id="product-details" class="product-details muted">Pesquise e selecione um produto para ver os dados salvos.</div>
     <label>Imagem pronta para publicar
       <input type="file" name="ready_image" accept=".png,.jpg,.jpeg,.webp,.gif,image/*">
       <small>Opcional. Se ainda não estiver pronta, salve o rascunho e mantenha o status em Fazendo.</small>
@@ -83,15 +92,49 @@
 {% else %}<div class="empty-state">Ainda não há publicações com esse status nesta área.</div>{% endif %}
 {% endif %}
 <script>
-const productSelect = document.getElementById('content-product');
-if (productSelect) productSelect.addEventListener('change', function () {
-  const option = this.options[this.selectedIndex];
-  const box = document.getElementById('product-details');
-  if (!option || !option.value) { box.textContent = 'Escolha um produto para ver os dados salvos.'; return; }
-  const notes = option.dataset.notes || 'Sem descrição cadastrada.';
-  const link = option.dataset.link || 'Nenhum link de afiliado cadastrado.';
-  box.textContent = option.dataset.name + ' — ' + notes + ' | Link: ' + link;
-});
+const productIdField = document.getElementById('content-product');
+const productSearch = document.getElementById('product-search');
+const productResults = document.getElementById('product-search-results');
+const productDetails = document.getElementById('product-details');
+if (productSearch && productResults && productIdField) {
+  const options = Array.from(productResults.querySelectorAll('.product-search-option'));
+  productSearch.addEventListener('input', function () {
+    const term = this.value.trim().toLocaleLowerCase('pt-BR');
+    let count = 0;
+    options.forEach(function (item) {
+      const match = (item.dataset.name + ' ' + item.dataset.category).toLocaleLowerCase('pt-BR').includes(term);
+      item.hidden = !match;
+      if (match) count++;
+    });
+    productResults.classList.toggle('is-empty', count === 0);
+    let empty = productResults.querySelector('.product-search-empty');
+    if (!count) {
+      if (!empty) { empty = document.createElement('p'); empty.className = 'product-search-empty muted'; productResults.appendChild(empty); }
+      empty.textContent = 'Nenhum produto encontrado. Confira o nome ou cadastre o produto primeiro.';
+    } else if (empty) empty.remove();
+    if (productIdField.value && !options.some(item => item.dataset.id === productIdField.value && !item.hidden)) {
+      productIdField.value = '';
+      productDetails.textContent = 'Selecione um produto da lista.';
+    }
+  });
+  options.forEach(function (item) {
+    item.addEventListener('click', function () {
+      options.forEach(other => { other.classList.remove('selected'); other.setAttribute('aria-selected', 'false'); });
+      this.classList.add('selected');
+      this.setAttribute('aria-selected', 'true');
+      productIdField.value = this.dataset.id;
+      productSearch.value = this.dataset.name;
+      options.forEach(other => { other.hidden = other !== this; });
+      productResults.classList.remove('is-empty');
+      const notes = this.dataset.notes || 'Sem descrição cadastrada.';
+      const link = this.dataset.link || 'Nenhum link de afiliado cadastrado.';
+      productDetails.textContent = this.dataset.name + ' — ' + notes + ' | Link: ' + link;
+    });
+  });
+  productSearch.addEventListener('focus', function () {
+    if (productIdField.value) options.forEach(item => { item.hidden = false; });
+  });
+}
 async function copyContentLink(button) {
   const link = button.dataset.copy || '';
   try { await navigator.clipboard.writeText(link); button.textContent = 'Link copiado!'; }

@@ -1,5 +1,10 @@
 """Fundação segura da Central de Afiliados; ainda em desenvolvimento."""
 import hmac
+import base64
+import json
+import mimetypes
+import urllib.error
+import urllib.request
 import os
 import secrets
 import sqlite3
@@ -515,6 +520,143 @@ def create_app(test_config=None):
                 flash("Preferências de conteúdo salvas. As próximas publicações usarão estas regras.", "success")
                 return redirect(url_for("content_settings"))
             return render_template("content_settings.html", settings=values)
+        finally:
+            db.close()
+
+
+    @app.route("/conteudo/criar-com-ia", methods=["GET", "POST"])
+    @login_required
+    def create_content_ai():
+        if request.method == "GET":
+            db = connect_db()
+            try:
+                products_data = [dict(row) for row in db.execute(
+                    "SELECT id, name, category, price, notes, image_filename FROM products ORDER BY name COLLATE NOCASE"
+                ).fetchall()]
+            finally:
+                db.close()
+            return render_template("content_ai.html", products=products_data, tipo=request.args.get("tipo", "story"))
+
+        content_type = request.form.get("content_type", "story").strip().lower()
+        product_id = request.form.get("product_id", type=int)
+        revision = request.form.get("revision", "").strip()
+        if content_type not in {"story", "post"}:
+            abort(400)
+        api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+        if not api_key:
+            flash("Falta configurar GEMINI_API_KEY no Termux. Nenhuma imagem foi gerada.", "error")
+            return redirect(url_for("create_content_ai", tipo=content_type))
+
+        db = connect_db()
+        try:
+            product = db.execute(
+                "SELECT id, name, category, price, notes, image_filename, affiliate_link FROM products WHERE id=?",
+                (product_id,),
+            ).fetchone() if product_id else None
+            if product is None:
+                flash("Escolha um produto cadastrado.", "error")
+                return redirect(url_for("create_content_ai", tipo=content_type))
+            if product["price"] is None or not product["image_filename"]:
+                flash("Este produto precisa ter preço e foto principal cadastrados antes da criação com IA.", "error")
+                return redirect(url_for("create_content_ai", tipo=content_type))
+            photos = [product["image_filename"]]
+            photos += [r["filename"] for r in db.execute(
+                "SELECT filename FROM product_images WHERE product_id=? ORDER BY id LIMIT 2", (product_id,)
+            ).fetchall()]
+            parts = []
+            settings = {r["key"]: r["value"] for r in db.execute("SELECT key, value FROM settings").fetchall()}
+            rules = {
+                "gerais": settings.get("general_rules", ""),
+                "estilo": settings.get("visual_style", ""),
+                "cores": settings.get("colors", ""),
+                "texto": settings.get("text_rules", ""),
+                "preço": settings.get("price_rules", ""),
+                "formato": settings.get("story_rules" if content_type == "story" else "feed_rules", ""),
+                "instruções extras": settings.get("extra_instructions", ""),
+            }
+            ratio = "9:16" if content_type == "story" else "3:4"
+            prompt = (
+                "Crie uma arte promocional para Instagram usando as imagens de referência anexadas. "
+                "Não altere a identidade do produto nem invente partes do produto. Gere uma única imagem. "
+                "Inclua textos em português do Brasil, somente quando legíveis e corretos. "
+                "Nunca mencione comissão, percentual de comissão, ganhos do afiliado ou informações internas. "
+                "Não invente desconto, preço anterior, avaliação, garantia ou característica. "
+                f"Produto: {product['name']}. Categoria: {product['category'] or 'não informada'}. "
+                f"Preço cadastrado: R$ {product['price']:.2f}. Detalhes cadastrados: {product['notes'] or 'nenhum'}. "
+                f"Formato obrigatório: {ratio}. Regras salvas pelo usuário: {json.dumps(rules, ensure_ascii=False)}. "
+                f"Pedido de ajuste desta tentativa: {revision or 'primeira versão, sem ajustes adicionais'}. "
+                "Para Stories, deixe uma área livre para inserir o link depois, sem desenhar link ou QR code. "
+                "Para Feed, inclua exatamente a chamada 'Esse e muitos outros no link no perfil'. "
+                "Priorize a foto real, composição limpa e boa leitura. Não adicione textos que não foram pedidos."
+            )
+            parts.append({"text": prompt})
+            for filename in photos:
+                path = upload_dir / filename
+                if not path.is_file():
+                    continue
+                mime = mimetypes.guess_type(path.name)[0] or "image/jpeg"
+                if mime not in {"image/jpeg", "image/png", "image/webp"}:
+                    continue
+                raw = path.read_bytes()
+                if len(raw) > 7 * 1024 * 1024:
+                    continue
+                parts.append({"inline_data": {"mime_type": mime, "data": base64.b64encode(raw).decode("ascii")}})
+            if len(parts) == 1:
+                flash("Não encontrei fotos de referência válidas para este produto.", "error")
+                return redirect(url_for("create_content_ai", tipo=content_type))
+
+            payload = {
+                "contents": [{"parts": parts}],
+                "generationConfig": {
+                    "responseModalities": ["TEXT", "IMAGE"],
+                    "imageConfig": {"aspectRatio": ratio}
+                }
+            }
+            endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=" + api_key
+            req = urllib.request.Request(
+                endpoint, data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"}, method="POST"
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=120) as response:
+                    result = json.loads(response.read().decode("utf-8"))
+            except urllib.error.HTTPError as exc:
+                detail = exc.read().decode("utf-8", errors="replace")[:500]
+                app.logger.warning("Gemini API HTTP %s: %s", exc.code, detail)
+                flash("O Gemini recusou a solicitação ou houve erro na API. Confira a chave, o acesso e a cota no Google AI Studio.", "error")
+                return redirect(url_for("create_content_ai", tipo=content_type))
+            except (urllib.error.URLError, TimeoutError):
+                flash("Não foi possível conectar ao Gemini agora. Tente novamente em instantes.", "error")
+                return redirect(url_for("create_content_ai", tipo=content_type))
+
+            image_bytes = None
+            caption_parts = []
+            for candidate in result.get("candidates", []):
+                for part in candidate.get("content", {}).get("parts", []):
+                    if part.get("text"):
+                        caption_parts.append(part["text"])
+                    inline = part.get("inlineData") or part.get("inline_data")
+                    if inline and inline.get("data") and (inline.get("mimeType") or inline.get("mime_type", "")).startswith("image/"):
+                        image_bytes = base64.b64decode(inline["data"])
+                        break
+                if image_bytes:
+                    break
+            if not image_bytes:
+                flash("O Gemini respondeu, mas não retornou uma imagem. Tente novamente ou simplifique as instruções.", "error")
+                return redirect(url_for("create_content_ai", tipo=content_type))
+
+            filename = uuid.uuid4().hex + ".png"
+            (upload_dir / filename).write_bytes(image_bytes)
+            caption = "\n".join(caption_parts).strip()
+            if content_type == "post" and "link no perfil" not in caption.lower():
+                caption = (caption + "\n\nEsse e muitos outros no link no perfil.").strip()
+            db.execute(
+                "INSERT INTO posts (product_id, caption, platform, status, content_type, image_filename) VALUES (?, ?, 'Instagram', 'Aguardando', ?, ?)",
+                (product_id, caption, content_type, filename),
+            )
+            db.commit()
+            flash("Imagem criada pelo Gemini e enviada para Aguardando aprovação. Revise antes de publicar.", "success")
+            return redirect(url_for("content", tipo=content_type, status="Aguardando"))
         finally:
             db.close()
 

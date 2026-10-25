@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Editar usuário · Central de Afiliados{% endblock %}
+{% block content %}
+<section class="section-heading">
+  <div><p class="eyebrow">ADMINISTRAÇÃO</p><h1>Editar <span class="accent">usuário.</span></h1><p class="muted">Conta: {{ user.username }}</p></div>
+  <a class="button button-quiet" href="{{ url_for('users_admin') }}">← Voltar aos usuários</a>
+</section>
+<section class="form-card">
+  <form method="post" class="form-stack">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <label for="username">Nome de usuário</label>
+    <input id="username" name="username" minlength="3" maxlength="40" value="{{ user.username }}" autocomplete="off" required>
+    <p class="muted">Deixe os campos de senha vazios para manter a senha atual.</p>
+    <label for="password">Nova senha (mínimo de 12 caracteres)</label>
+    <input id="password" name="password" type="password" minlength="12" autocomplete="new-password">
+    <label for="confirmation">Confirmar nova senha</label>
+    <input id="confirmation" name="confirmation" type="password" minlength="12" autocomplete="new-password">
+    <div class="user-actions">
+      <button class="button" type="submit">Salvar alterações</button>
+      <a class="button button-quiet" href="{{ url_for('users_admin') }}">Cancelar</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

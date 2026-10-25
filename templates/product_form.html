@@ -1,14 +1,38 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Editar produto' if product else 'Novo produto' }} · Central{% endblock %}
+{% block title %}{{ 'Editar produto' if product else 'Novo produto' }} · Central<script>
+function testAffiliateLink() {
+  const field = document.getElementById("affiliate-link");
+  const value = (field.value || "").trim();
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "https:" || !parsed.hostname) {
+      alert("Cole um link HTTPS válido antes de testar.");
+      return;
+    }
+    window.open(parsed.href, "_blank", "noopener,noreferrer");
+  } catch (_) {
+    alert("Cole um link válido antes de testar.");
+  }
+}
+</script>
+{% endblock %}
 {% block content %}
 <section class="section-heading"><p class="eyebrow">CATÁLOGO</p><h1>{{ 'Editar' if product else 'Cadastrar' }} <span class="accent">produto.</span></h1><p class="muted">Mantenha o link de afiliado separado do nome.</p><a class="button button-quiet" href="{{ url_for('products') }}">← Voltar ao catálogo</a></section>
+{% if not product %}
+<form class="form-card" method="post" action="{{ url_for('import_product_link') }}">
+<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+<label>Importar produto pelo seu link de afiliado
+<div class="form-row"><input type="url" name="affiliate_link" required placeholder="Cole seu link de afiliado da Shopee" value="{{ draft.affiliate_link if draft is defined else '' }}"><button class="button button-quiet" type="submit">Buscar dados</button></div>
+<small>A Central tentará importar nome, preço, descrição e comissão quando esses dados estiverem visíveis. Confira tudo antes de salvar.</small></label>
+</form>
+{% endif %}
 <form class="form-card" method="post" enctype="multipart/form-data">
 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-<label>Nome do produto<input name="name" required maxlength="180" value="{{ product.name if product else '' }}" placeholder="Ex.: Tênis de corrida"></label>
-<div class="form-row"><label>Categoria<input name="category" maxlength="80" value="{{ product.category if product else '' }}" placeholder="Academia, corrida..."></label><label>Preço do produto<div class="currency-input"><span aria-hidden="true">R$</span><input name="price" inputmode="decimal" value="{{ product.price if product and product.price is not none else '' }}" placeholder="23,50" required></div></label></div>
-<label>Comissão<div class="currency-input percent-input"><input name="commission" inputmode="decimal" value="{{ product.commission if product and product.commission is not none else '' }}" placeholder="20"><span aria-hidden="true">%</span></div><small>Informe a porcentagem de comissão indicada pela Shopee, de 0 a 100%.</small></label>
-<label>Link de afiliado Shopee<input type="url" name="affiliate_link" value="{{ product.affiliate_link if product else '' }}" placeholder="https://..."></label>
-<label>Observações / descrição<textarea name="notes" rows="4" maxlength="3000" placeholder="Detalhes confirmados do produto">{{ product.notes if product else '' }}</textarea></label>
+<label>Nome do produto<input name="name" required maxlength="180" value="{{ product.name if product else (draft.name if draft is defined else '') }}" placeholder="Ex.: Tênis de corrida"></label>
+<div class="form-row"><label>Categoria<input name="category" maxlength="80" value="{{ product.category if product else (draft.category if draft is defined else '') }}" placeholder="Academia, corrida..."></label><label>Preço do produto<div class="currency-input"><span aria-hidden="true">R$</span><input name="price" inputmode="decimal" value="{{ product.price if product and product.price is not none else (draft.price if draft is defined else '') }}" placeholder="23,50" required></div></label></div>
+<label>Comissão<div class="currency-input percent-input"><input name="commission" inputmode="decimal" value="{{ product.commission if product and product.commission is not none else (draft.commission if draft is defined else '') }}" placeholder="20"><span aria-hidden="true">%</span></div><small>Informe a porcentagem de comissão indicada pela Shopee, de 0 a 100%.</small></label>
+<label>Link de afiliado Shopee<div class="form-row"><input type="url" name="affiliate_link" id="affiliate-link" value="{{ product.affiliate_link if product else (draft.affiliate_link if draft is defined else '') }}" placeholder="https://..."><button class="button button-quiet" type="button" onclick="testAffiliateLink()">Testar link</button></div><small>Abre o link que está neste campo, sem modificá-lo.</small></label>
+<label>Observações / descrição<textarea name="notes" rows="4" maxlength="3000" placeholder="Detalhes confirmados do produto">{{ product.notes if product else (draft.notes if draft is defined else '') }}</textarea></label>
 <label>Adicionar fotos (máximo 10 no total)<input type="file" name="photos" accept=".png,.jpg,.jpeg,.webp,.gif" multiple><small>PNG, JPG, WEBP ou GIF. Selecione várias fotos de uma vez.</small></label>
 {% if product and product.image_filename %}<p class="muted">Foto principal</p><img class="form-thumb" src="{{ url_for('static', filename='uploads/' ~ product.image_filename) }}" alt="Foto principal">{% endif %}
 {% if product %}<h2>Fotos adicionais</h2>{% for photo in product_photos %}<div class="photo-row"><img class="form-thumb" src="{{ url_for('static', filename='uploads/' ~ photo.filename) }}" alt="Foto adicional"><span>Foto adicional</span></div>{% else %}<p class="muted">Nenhuma foto adicional.</p>{% endfor %}{% endif %}

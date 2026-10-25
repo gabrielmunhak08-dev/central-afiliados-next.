@@ -248,9 +248,7 @@ def create_app(test_config=None):
     def users_admin():
         db = connect_db()
         try:
-            current = db.execute("SELECT is_admin FROM users WHERE id = ?", (g.user["id"],)).fetchone()
-            if not current or not current["is_admin"]:
-                abort(403)
+            require_admin(db)
             if request.method == "POST":
                 username = request.form.get("username", "").strip()
                 password = request.form.get("password", "")
@@ -277,6 +275,77 @@ def create_app(test_config=None):
             return render_template("users.html", users=users)
         finally:
             db.close()
+
+    def require_admin(db):
+        current = db.execute("SELECT is_admin FROM users WHERE id = ?", (g.user["id"],)).fetchone()
+        if not current or not current["is_admin"]:
+            abort(403)
+
+    @app.get("/usuarios/<int:user_id>")
+    @login_required
+    def user_detail(user_id):
+        db = connect_db()
+        try:
+            require_admin(db)
+            user = db.execute("SELECT id, username, is_admin, created_at FROM users WHERE id = ?", (user_id,)).fetchone()
+            if user is None: abort(404)
+            return render_template("user_detail.html", user=user, is_self=(user["id"] == g.user["id"]))
+        finally: db.close()
+
+    @app.route("/usuarios/<int:user_id>/editar", methods=["GET", "POST"])
+    @login_required
+    def user_edit(user_id):
+        db = connect_db()
+        try:
+            require_admin(db)
+            user = db.execute("SELECT id, username, is_admin, created_at FROM users WHERE id = ?", (user_id,)).fetchone()
+            if user is None: abort(404)
+            if request.method == "POST":
+                username = request.form.get("username", "").strip()
+                password = request.form.get("password", "")
+                confirmation = request.form.get("confirmation", "")
+                if len(username) < 3 or len(username) > 40: flash("O usuário precisa ter de 3 a 40 caracteres.", "error")
+                elif password and len(password) < 12: flash("A nova senha precisa ter pelo menos 12 caracteres.", "error")
+                elif password != confirmation: flash("As senhas não coincidem.", "error")
+                else:
+                    try:
+                        if password:
+                            db.execute("UPDATE users SET username = ?, password_hash = ? WHERE id = ?", (username, generate_password_hash(password), user_id))
+                        else:
+                            db.execute("UPDATE users SET username = ? WHERE id = ?", (username, user_id))
+                        db.commit()
+                        if user_id == g.user["id"]:
+                            session.clear()
+                            session["user_id"] = user_id
+                            session.permanent = True
+                            session["_csrf_token"] = secrets.token_urlsafe(32)
+                        flash("Usuário atualizado com sucesso.", "success")
+                        return redirect(url_for("users_admin"))
+                    except sqlite3.IntegrityError:
+                        db.rollback()
+                        flash("Esse nome de usuário já existe. Escolha outro.", "error")
+            return render_template("user_edit.html", user=user)
+        finally: db.close()
+
+    @app.post("/usuarios/<int:user_id>/excluir")
+    @login_required
+    def user_delete(user_id):
+        db = connect_db()
+        try:
+            require_admin(db)
+            user = db.execute("SELECT id, username, is_admin FROM users WHERE id = ?", (user_id,)).fetchone()
+            if user is None: abort(404)
+            if user_id == g.user["id"]:
+                flash("Você não pode excluir sua própria conta por aqui.", "error")
+                return redirect(url_for("users_admin"))
+            if user["is_admin"] and db.execute("SELECT COUNT(*) FROM users WHERE is_admin = 1").fetchone()[0] <= 1:
+                flash("Não é possível excluir o último administrador.", "error")
+                return redirect(url_for("users_admin"))
+            db.execute("DELETE FROM users WHERE id = ?", (user_id,))
+            db.commit()
+            flash("Usuário excluído.", "success")
+            return redirect(url_for("users_admin"))
+        finally: db.close()
 
     @app.post("/logout")
     @login_required

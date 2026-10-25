@@ -625,6 +625,33 @@ def create_app(test_config=None):
         finally:
             db.close()
 
+    @app.post("/produtos/<int:product_id>/foto-principal/<int:photo_id>")
+    @login_required
+    def set_main_product_photo(product_id, photo_id):
+        db = connect_db()
+        try:
+            product = db.execute("SELECT id, image_filename FROM products WHERE id=?", (product_id,)).fetchone()
+            if product is None:
+                abort(404)
+            selected = db.execute(
+                "SELECT id, filename FROM product_images WHERE id=? AND product_id=?",
+                (photo_id, product_id),
+            ).fetchone()
+            if selected is None:
+                abort(404)
+            current_main = product["image_filename"]
+            # Troca a foto principal com a foto adicional escolhida; nenhuma imagem é apagada.
+            db.execute("UPDATE products SET image_filename=? WHERE id=?", (selected["filename"], product_id))
+            if current_main:
+                db.execute("UPDATE product_images SET filename=? WHERE id=? AND product_id=?", (current_main, photo_id, product_id))
+            else:
+                db.execute("DELETE FROM product_images WHERE id=? AND product_id=?", (photo_id, product_id))
+            db.commit()
+            flash("Foto principal atualizada. As outras fotos foram preservadas.", "success")
+            return redirect(url_for("product_form", product_id=product_id))
+        finally:
+            db.close()
+
     @app.route("/conteudo", methods=["GET", "POST"])
     @login_required
     def content():

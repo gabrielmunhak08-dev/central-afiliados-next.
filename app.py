@@ -118,6 +118,10 @@ def create_app(test_config=None):
                 db.execute("INSERT OR IGNORE INTO categories (name) VALUES (?)", (category_name,))
             for category_row in db.execute("SELECT DISTINCT TRIM(category) AS name FROM products WHERE TRIM(category) <> ''").fetchall():
                 db.execute("INSERT OR IGNORE INTO categories (name) VALUES (?)", (category_row["name"],))
+            task_columns = {row[1] for row in db.execute("PRAGMA table_info(calendar_tasks)").fetchall()}
+            if "color" not in task_columns:
+                db.execute("ALTER TABLE calendar_tasks ADD COLUMN color TEXT NOT NULL DEFAULT 'blue'")
+
             # Migração segura para usuários e publicações, sem apagar dados existentes.
             user_columns = {row[1] for row in db.execute("PRAGMA table_info(users)").fetchall()}
             if "is_admin" not in user_columns:
@@ -209,32 +213,34 @@ def create_app(test_config=None):
                 task_type = request.form.get("task_type", "Tarefa").strip()
                 due_at = request.form.get("due_at", "").strip()
                 product_id = request.form.get("product_id", "").strip()
-                if not title or not due_at:
-                    flash("Informe o nome e a data da tarefa.", "error")
-                else:
-                    try:
-                        linked_product = int(product_id) if product_id else None
-                        if linked_product is not None and not db.execute("SELECT id FROM products WHERE id = ?", (linked_product,)).fetchone():
-                            linked_product = None
-                        db.execute("INSERT INTO calendar_tasks (title, description, task_type, due_at, product_id) VALUES (?, ?, ?, ?, ?)",
-                                   (title, description, task_type, due_at, linked_product))
-                        db.commit()
-                        flash("Tarefa adicionada ao calendário.", "success")
-                        return redirect(url_for("calendar", mes=due_at[:7]))
-                    except (ValueError, sqlite3.Error):
-                        db.rollback()
-                        flash("Não foi possível salvar a tarefa. Confira os dados.", "error")
+                color = request.form.get("color", "blue").strip()
+                if color not in {"yellow", "blue", "green", "red", "pink"}:
+                    color = "blue"
+                try:
+                    datetime.datetime.strptime(due_at, "%Y-%m-%dT%H:%M")
+                    linked_product = int(product_id) if product_id else None
+                    if linked_product is not None and not db.execute("SELECT id FROM products WHERE id = ?", (linked_product,)).fetchone():
+                        linked_product = None
+                    if not title:
+                        raise ValueError("title")
+                    db.execute("INSERT INTO calendar_tasks (title, description, task_type, due_at, product_id, color) VALUES (?, ?, ?, ?, ?, ?)", (title, description, task_type, due_at, linked_product, color))
+                    db.commit()
+                    flash("Compromisso adicionado à agenda.", "success")
+                    return redirect(url_for("calendar", dia=due_at[:10]))
+                except (ValueError, sqlite3.Error):
+                    db.rollback()
+                    flash("Não foi possível salvar. Confira o título, a data e o horário.", "error")
             today = datetime.date.today()
-            month = request.args.get("mes", "")
             try:
-                selected_month = datetime.datetime.strptime(month, "%Y-%m").date().replace(day=1) if month else today.replace(day=1)
+                selected_day = datetime.datetime.strptime(request.args.get("dia", ""), "%Y-%m-%d").date()
             except ValueError:
-                selected_month = today.replace(day=1)
-            prev_month = (selected_month - datetime.timedelta(days=1)).replace(day=1)
-            next_month = (selected_month.replace(day=28) + datetime.timedelta(days=4)).replace(day=1)
-            month_key = selected_month.strftime("%Y-%m")
-            tasks = db.execute("SELECT t.*, p.name AS product_name FROM calendar_tasks t LEFT JOIN products p ON p.id=t.product_id WHERE substr(t.due_at,1,7)=? ORDER BY t.due_at", (month_key,)).fetchall()
-            posts = db.execute("SELECT po.id, po.caption, po.status, po.planned_at, po.content_type, p.name AS product_name FROM posts po LEFT JOIN products p ON p.id=po.product_id WHERE po.planned_at IS NOT NULL AND substr(po.planned_at,1,7)=? ORDER BY po.planned_at", (month_key,)).fetchall()
+                selected_day = today
+            week_start = selected_day - datetime.timedelta(days=selected_day.weekday())
+            week_days = [week_start + datetime.timedelta(days=i) for i in range(7)]
+            week_end = week_start + datetime.timedelta(days=7)
+            tasks = db.execute("SELECT t.*, p.name AS product_name FROM calendar_tasks t LEFT JOIN products p ON p.id=t.product_id WHERE t.due_at >= ? AND t.due_at < ? ORDER BY t.due_at", (week_start.isoformat() + "T00:00", week_end.isoformat() + "T00:00")).fetchall()
+            day_tasks = [task for task in tasks if task["due_at"][:10] == selected_day.isoformat()]
+            day_counts = {day.isoformat(): sum(1 for task in tasks if task["due_at"][:10] == day.isoformat()) for day in week_days}
             products = db.execute("SELECT id, name FROM products ORDER BY name").fetchall()
             task_stats = {
                 "pending": db.execute("SELECT COUNT(*) FROM calendar_tasks WHERE status='Pendente'").fetchone()[0],
@@ -243,9 +249,7 @@ def create_app(test_config=None):
             }
         finally:
             db.close()
-        return render_template("calendar.html", tasks=tasks, posts=posts, products=products,
-            selected_month=selected_month, prev_month=prev_month, next_month=next_month,
-            task_stats=task_stats, month_key=month_key)
+        return render_template("calendar.html", tasks=tasks, day_tasks=day_tasks, products=products, selected_day=selected_day, week_days=week_days, day_counts=day_counts, prev_day=selected_day - datetime.timedelta(days=1), next_day=selected_day + datetime.timedelta(days=1), task_stats=task_stats)
 
     @app.post("/calendario/<int:task_id>/status")
     @login_required
@@ -259,7 +263,7 @@ def create_app(test_config=None):
             db.commit()
         finally:
             db.close()
-        return redirect(url_for("calendar", mes=request.form.get("mes", "")))
+        return redirect(url_for("calendar", dia=request.form.get("dia", "")))
 
     @app.route("/configurar", methods=["GET", "POST"])
     def setup():

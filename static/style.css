@@ -176,3 +176,6 @@ footer{text-align:center;color:#727c89;font-size:.78rem;padding:22px;border-top:
 .ai-create-button{background:linear-gradient(135deg,#ff7a18,#ff5a00);color:#fff;border:1px solid #ff8a36}
 .approval-card{border-color:#70401e}
 @media(max-width:560px){.creation-options{flex-direction:column}.creation-options .button{width:100%}.creation-options.compact{flex-direction:row}.creation-options.compact .button{width:auto}}
+/* Espaçamento dos cartões principais sem título duplicado. */
+.module-card-primary p{margin:14px 0 22px}
+.module-card-primary .button{align-self:flex-start}

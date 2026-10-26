@@ -533,3 +533,29 @@ body:has(.content-tabs) .empty-state { padding:clamp(30px,6vw,60px); border-styl
 .product-card-labels { display:flex; align-items:center; min-height:0; margin:0 0 8px; }
 .product-posted-badge { display:inline-flex; align-items:center; gap:5px; padding:5px 9px; border:1px solid #269b68; border-radius:999px; background:rgba(38,155,104,.13); color:#38c985; font-size:.7rem; font-weight:850; letter-spacing:.01em; }
 :root[data-theme="light"] .product-posted-badge { background:rgba(24,128,82,.09); color:#167447; }
+
+
+/* Calendário geral */
+.calendar-header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+.calendar-month-nav{display:flex;align-items:center;gap:10px}
+.calendar-month-nav h2{margin:0;font-size:1.2rem}
+.calendar-month-nav a{display:inline-flex;align-items:center;justify-content:center;min-width:40px;min-height:40px;border:1px solid var(--line);border-radius:12px;color:var(--text);text-decoration:none;background:var(--panel);font-size:1.4rem}
+.calendar-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0 24px}
+.calendar-stat{padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
+.calendar-stat strong{display:block;font-size:1.55rem;margin-top:5px}
+.calendar-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px;align-items:start}
+.calendar-panel{padding:20px;border:1px solid var(--line);border-radius:18px;background:var(--panel);min-width:0}
+.calendar-panel h2{font-size:1.05rem;margin:0 0 16px}
+.calendar-form{display:grid;gap:12px}
+.calendar-form label{display:grid;gap:6px;color:var(--muted);font-size:.88rem}
+.calendar-form input,.calendar-form select,.calendar-form textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font:inherit}
+.calendar-form textarea{min-height:76px;resize:vertical}
+.calendar-task{padding:13px 0;border-top:1px solid var(--line);display:grid;gap:7px}
+.calendar-task-title{font-weight:700}
+.calendar-task-meta{font-size:.82rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px}
+.calendar-pill{display:inline-flex;width:max-content;padding:4px 8px;border-radius:999px;background:var(--panel2);font-size:.75rem;color:var(--muted)}
+.calendar-pill.done{color:#8fe0ad}.calendar-pill.overdue{color:#ff9b8f}
+.calendar-task-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.calendar-task-actions select{max-width:180px;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text)}
+.calendar-empty{padding:20px 0;color:var(--muted);font-size:.92rem}
+@media(max-width:760px){.calendar-layout{grid-template-columns:1fr}.calendar-stats{gap:8px}.calendar-stat{padding:12px}.calendar-stat strong{font-size:1.3rem}.calendar-panel{padding:15px}}

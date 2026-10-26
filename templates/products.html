@@ -34,8 +34,6 @@
 {% else %}
 <section class="empty-state"><span class="empty-icon">＋</span><h2>Seu catálogo começa aqui</h2><p class="muted">{% if q %}Nenhum produto encontrado. Tente outro termo.{% else %}Cadastre seu primeiro produto para organizar o preço, link de afiliado e fotos.{% endif %}</p><a class="button" href="{{ url_for('product_form') }}">Cadastrar produto</a></section>
 {% endif %}
-{% endblock %}
-
 <script>
 (function () {
   document.querySelectorAll('[data-gallery].has-gallery').forEach(function (gallery) {
@@ -71,3 +69,4 @@
   });
 })();
 </script>
+{% endblock %}

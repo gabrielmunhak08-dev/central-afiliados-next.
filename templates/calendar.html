@@ -44,7 +44,7 @@
         {% if task.product_name %}<div class="calendar-task-meta">Produto: {{ task.product_name }}</div>{% endif %}
         {% if task.description %}<div class="muted">{{ task.description }}</div>{% endif %}
         <div class="calendar-task-actions">
-          <span class="calendar-pill {{ 'done' if task.status == 'Concluída' else ('overdue' if task.due_at < now|string and task.status != 'Concluída' else '') }}">{{ task.status }}</span>
+          <span class="calendar-pill {{ 'done' if task.status == 'Concluída' else '' }}">{{ task.status }}</span>
           <form method="post" action="{{ url_for('calendar_task_status', task_id=task.id) }}">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="mes" value="{{ month_key }}">
             <select name="status" aria-label="Alterar status da tarefa" onchange="this.form.submit()">

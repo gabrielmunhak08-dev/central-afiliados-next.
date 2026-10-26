@@ -1,20 +1,52 @@
 {% extends "base.html" %}
-{% block title %}Painel · Central de Afiliados{% endblock %}
+{% block title %}Visão geral · Central de Afiliados{% endblock %}
 {% block content %}
-<section class="welcome">
-  <p class="eyebrow">SEU ESPAÇO DE TRABALHO</p>
-  <h1>Uma central. <span class="accent">Tudo organizado.</span></h1>
-  <p class="muted">A estrutura privada e o banco local já estão preparados. Agora vamos construir os módulos sem misturar dados antigos nem inventar resultados.</p>
-  <div class="status"><span class="pulse"></span> Acesso protegido · base inicial</div>
-  <div class="stats-row"><div class="stat"><strong>{{ product_count }}</strong><span>Produtos cadastrados</span></div><div class="stat"><strong>{{ post_count }}</strong><span>Publicações planejadas</span></div></div>
+<section class="dashboard-hero">
+  <div class="dashboard-hero-copy">
+    <div class="hero-kicker"><span class="hero-kicker-dot"></span> SEU PAINEL DE CONTROLE</div>
+    <h1>Seu negócio.<br><span class="hero-gradient">Em movimento.</span></h1>
+    <p>Produtos organizados, conteúdo pronto e sua rotina de afiliado em um só lugar.</p>
+    <div class="hero-actions">
+      <a class="button hero-primary-button" href="{{ url_for('products') }}"><span aria-hidden="true">＋</span> Adicionar produto</a>
+      <a class="button hero-secondary-button" href="{{ url_for('content') }}">Abrir marketing <span aria-hidden="true">↗</span></a>
+    </div>
+  </div>
+  <div class="hero-orbit" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit-core"><span class="orbit-bag">S</span><span class="orbit-spark">✦</span></div><span class="orbit-node node-one"></span><span class="orbit-node node-two"></span><span class="orbit-node node-three"></span></div>
+  <div class="hero-bottom-line"><span><span class="live-dot"></span> CENTRAL PRONTA PARA ORGANIZAR</span><span>WORKSPACE / 01</span></div>
 </section>
-<section class="section-heading"><div><p class="eyebrow">PRÓXIMAS ETAPAS</p><h2>Construindo por módulos</h2></div></section>
-<div class="module-grid">
-  <article class="module-card module-card-primary"><span class="module-number">01</span><p>Produtos, preços, links separados e até 10 fotos por produto.</p><a class="button button-small" href="{{ url_for('products') }}">Produtos →</a></article>
-  <article class="module-card module-card-primary"><span class="module-number">02</span><p>Crie publicações separadas para Stories e Feed, salve imagens, copie links e acompanhe o status.</p><a class="button button-small" href="{{ url_for('content') }}">Marketing →</a></article>
-  <article class="module-card"><span class="module-number">03</span><h3>Calendário</h3><p>Organize a semana e acompanhe o estado de cada publicação.</p><span class="tag">Planejado</span></article>
-  <article class="module-card"><span class="module-number">04</span><h3>Resultados</h3><p>Cliques, vendas e comissões com estimativas claramente identificadas.</p><span class="tag">Planejado</span></article>
-</div>
-{% if is_admin %}<section class="section-heading"><div><h2>Administração</h2><p class="muted">Crie acessos individuais para pessoas que vão testar a Central.</p></div><a class="button button-small" href="{{ url_for('users_admin') }}">Gerenciar usuários →</a></section>{% endif %}
-<p class="small-note">Ainda não publique este servidor diretamente na internet. A aplicação está em desenvolvimento e precisa passar pelos testes e pela instalação no seu ambiente.</p>
+
+<section class="dashboard-section">
+  <div class="dashboard-section-heading"><div><p class="eyebrow">RESUMO DO WORKSPACE</p><h2>Visão geral</h2></div><span class="section-caption">Dados cadastrados na sua central</span></div>
+  <div class="overview-stats">
+    <article class="overview-stat"><div class="stat-icon stat-icon-orange"><span>▦</span></div><div class="overview-stat-copy"><span>Produtos no catálogo</span><strong>{{ product_count }}</strong><small>Produtos cadastrados</small></div><span class="stat-decoration">01</span></article>
+    <article class="overview-stat"><div class="stat-icon stat-icon-purple"><span>✳</span></div><div class="overview-stat-copy"><span>Conteúdos planejados</span><strong>{{ post_count }}</strong><small>Publicações salvas</small></div><span class="stat-decoration">02</span></article>
+  </div>
+</section>
+
+<section class="dashboard-section">
+  <div class="dashboard-section-heading"><div><p class="eyebrow">FERRAMENTAS</p><h2>Seu espaço de trabalho</h2></div><span class="section-caption">Acesso rápido aos módulos</span></div>
+  <div class="workspace-grid">
+    <a class="workspace-card workspace-card-featured" href="{{ url_for('products') }}">
+      <div class="workspace-card-top"><span class="workspace-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8.5 12 4l8 4.5v9L12 22l-8-4.5v-9Z" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 8.7 12 13l7.5-4.3M12 13v9" stroke="currentColor" stroke-width="1.7"/></svg></span><span class="workspace-arrow">↗</span></div>
+      <span class="workspace-index">MÓDULO 01</span><h3>Produtos</h3><p>Gerencie preços, links de afiliado e galerias com até 10 fotos por produto.</p><span class="workspace-link">Abrir catálogo <span>→</span></span>
+    </a>
+    <a class="workspace-card workspace-card-marketing" href="{{ url_for('content') }}">
+      <div class="workspace-card-top"><span class="workspace-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="4" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="1.7"/><circle cx="17.5" cy="6.8" r="1" fill="currentColor"/></svg></span><span class="workspace-arrow">↗</span></div>
+      <span class="workspace-index">MÓDULO 02</span><h3>Marketing</h3><p>Prepare Stories e Feed, copie links, baixe imagens e organize publicações.</p><span class="workspace-link">Abrir marketing <span>→</span></span>
+    </a>
+    <article class="workspace-card workspace-card-planned">
+      <div class="workspace-card-top"><span class="workspace-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="16" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M8 3v4M16 3v4M4 10h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span><span class="planned-tag">EM PLANEJAMENTO</span></div>
+      <span class="workspace-index">MÓDULO 03</span><h3>Calendário</h3><p>Planeje sua semana e visualize quando cada conteúdo está pronto para publicar.</p><span class="workspace-link workspace-link-muted">Próxima etapa <span>↗</span></span>
+    </article>
+    <article class="workspace-card workspace-card-planned">
+      <div class="workspace-card-top"><span class="workspace-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 19V5M4 19h17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="m7 15 4-4 3 2 5-6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="planned-tag">EM PLANEJAMENTO</span></div>
+      <span class="workspace-index">MÓDULO 04</span><h3>Resultados</h3><p>Reúna cliques, vendas e comissões quando os dados estiverem disponíveis.</p><span class="workspace-link workspace-link-muted">Próxima etapa <span>↗</span></span>
+    </article>
+  </div>
+</section>
+
+{% if is_admin %}
+<section class="admin-strip"><span class="admin-strip-icon">⚙</span><div><strong>Administração</strong><p>Gerencie os acessos de quem está testando a Central.</p></div><a class="button button-small button-quiet" href="{{ url_for('users_admin') }}">Gerenciar usuários <span>→</span></a></section>
+{% endif %}
+<div class="dashboard-footnote"><span class="footnote-icon">i</span><p>Os números acima refletem apenas os dados salvos na Central. Métricas de cliques, vendas e comissões serão exibidas quando houver integração ou registro real.</p></div>
 {% endblock %}

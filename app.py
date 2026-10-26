@@ -87,6 +87,16 @@ def create_app(test_config=None):
                     planned_at TEXT,
                     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
                 );
+                CREATE TABLE IF NOT EXISTS calendar_tasks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    title TEXT NOT NULL,
+                    description TEXT NOT NULL DEFAULT '',
+                    task_type TEXT NOT NULL DEFAULT 'Tarefa',
+                    due_at TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'Pendente',
+                    product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
                 CREATE TABLE IF NOT EXISTS metrics (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
@@ -186,6 +196,70 @@ def create_app(test_config=None):
         return render_template(
             "dashboard.html", product_count=product_count, post_count=post_count, is_admin=is_admin
         )
+
+    @app.route("/calendario", methods=["GET", "POST"])
+    @login_required
+    def calendar():
+        import datetime
+        db = connect_db()
+        try:
+            if request.method == "POST":
+                title = request.form.get("title", "").strip()
+                description = request.form.get("description", "").strip()
+                task_type = request.form.get("task_type", "Tarefa").strip()
+                due_at = request.form.get("due_at", "").strip()
+                product_id = request.form.get("product_id", "").strip()
+                if not title or not due_at:
+                    flash("Informe o nome e a data da tarefa.", "error")
+                else:
+                    try:
+                        linked_product = int(product_id) if product_id else None
+                        if linked_product is not None and not db.execute("SELECT id FROM products WHERE id = ?", (linked_product,)).fetchone():
+                            linked_product = None
+                        db.execute("INSERT INTO calendar_tasks (title, description, task_type, due_at, product_id) VALUES (?, ?, ?, ?, ?)",
+                                   (title, description, task_type, due_at, linked_product))
+                        db.commit()
+                        flash("Tarefa adicionada ao calendário.", "success")
+                        return redirect(url_for("calendar", mes=due_at[:7]))
+                    except (ValueError, sqlite3.Error):
+                        db.rollback()
+                        flash("Não foi possível salvar a tarefa. Confira os dados.", "error")
+            today = datetime.date.today()
+            month = request.args.get("mes", "")
+            try:
+                selected_month = datetime.datetime.strptime(month, "%Y-%m").date().replace(day=1) if month else today.replace(day=1)
+            except ValueError:
+                selected_month = today.replace(day=1)
+            prev_month = (selected_month - datetime.timedelta(days=1)).replace(day=1)
+            next_month = (selected_month.replace(day=28) + datetime.timedelta(days=4)).replace(day=1)
+            month_key = selected_month.strftime("%Y-%m")
+            tasks = db.execute("SELECT t.*, p.name AS product_name FROM calendar_tasks t LEFT JOIN products p ON p.id=t.product_id WHERE substr(t.due_at,1,7)=? ORDER BY t.due_at", (month_key,)).fetchall()
+            posts = db.execute("SELECT po.id, po.caption, po.status, po.planned_at, po.content_type, p.name AS product_name FROM posts po LEFT JOIN products p ON p.id=po.product_id WHERE po.planned_at IS NOT NULL AND substr(po.planned_at,1,7)=? ORDER BY po.planned_at", (month_key,)).fetchall()
+            products = db.execute("SELECT id, name FROM products ORDER BY name").fetchall()
+            task_stats = {
+                "pending": db.execute("SELECT COUNT(*) FROM calendar_tasks WHERE status='Pendente'").fetchone()[0],
+                "done": db.execute("SELECT COUNT(*) FROM calendar_tasks WHERE status='Concluída'").fetchone()[0],
+                "overdue": db.execute("SELECT COUNT(*) FROM calendar_tasks WHERE status!='Concluída' AND due_at < ?", (today.isoformat() + "T00:00",)).fetchone()[0],
+            }
+        finally:
+            db.close()
+        return render_template("calendar.html", tasks=tasks, posts=posts, products=products,
+            selected_month=selected_month, prev_month=prev_month, next_month=next_month,
+            task_stats=task_stats, month_key=month_key)
+
+    @app.post("/calendario/<int:task_id>/status")
+    @login_required
+    def calendar_task_status(task_id):
+        status = request.form.get("status", "")
+        if status not in ("Pendente", "Em andamento", "Concluída"):
+            abort(400)
+        db = connect_db()
+        try:
+            db.execute("UPDATE calendar_tasks SET status=? WHERE id=?", (status, task_id))
+            db.commit()
+        finally:
+            db.close()
+        return redirect(url_for("calendar", mes=request.form.get("mes", "")))
 
     @app.route("/configurar", methods=["GET", "POST"])
     def setup():

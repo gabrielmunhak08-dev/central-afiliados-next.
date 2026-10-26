@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Produtos · Central de Afiliados{% endblock %}
 {% block content %}
+<div class="content-nav-row"><button class="back-button" type="button" onclick="if (history.length > 1) history.back(); else location.href='{{ url_for('dashboard') }}'">← Voltar</button><a class="home-content-link" href="{{ url_for('dashboard') }}">Central principal</a></div>
 <section class="section-heading product-heading">
   <div><p class="eyebrow">CATÁLOGO</p><h1>Seus <span class="accent">produtos.</span></h1><p class="muted">Organize preços, links e fotos em um só lugar.</p></div>
   <a class="button" href="{{ url_for('product_form') }}">+ Novo produto</a>

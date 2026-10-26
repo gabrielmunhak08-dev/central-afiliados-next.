@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b0e14">
   <title>{% block title %}Central de Afiliados{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20261026c">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20261026d">
   <script>
     (function () {
       try {
@@ -28,6 +28,7 @@
       <a href="{{ url_for('dashboard') }}" class="top-nav-link">Visão geral</a>
       <a href="{{ url_for('products') }}" class="top-nav-link">Produtos</a>
       <a href="{{ url_for('content') }}" class="top-nav-link">Marketing</a>
+      <a href="{{ url_for('calendar') }}" class="top-nav-link">Calendário</a>
     </nav>
     <div class="account">
       <details class="appearance-menu">

@@ -41,7 +41,7 @@
       {% for day in week_days %}
       <a class="calendar-week-day {{ 'selected' if day == selected_day else '' }}" href="{{ url_for('calendar', dia=day.isoformat()) }}">
         <span>{{ ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'][day.weekday()] }}</span><strong>{{ day.strftime('%d') }}</strong>
-        <small>{{ tasks|selectattr('due_at', 'search', day.isoformat())|list|length }} compromisso(s)</small>
+        <small>{{ day_counts[day.isoformat()] }} compromisso(s)</small>
       </a>
       {% endfor %}
     </div>

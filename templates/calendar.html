@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Calendário · Central de Afiliados{% endblock %}
+{% block content %}
+<section class="section-heading">
+  <div><p class="eyebrow">ORGANIZAÇÃO DA OPERAÇÃO</p><h1>Calendário <span class="accent">inteligente</span></h1><p class="muted">Organize publicações, pesquisas e tarefas da sua semana em um só lugar.</p></div>
+</section>
+<div class="calendar-header">
+  <div class="calendar-month-nav">
+    <a href="{{ url_for('calendar', mes=prev_month.strftime('%Y-%m')) }}" aria-label="Mês anterior">‹</a>
+    <h2>{{ selected_month.strftime('%B de %Y')|title }}</h2>
+    <a href="{{ url_for('calendar', mes=next_month.strftime('%Y-%m')) }}" aria-label="Próximo mês">›</a>
+  </div>
+  <a class="button button-small button-quiet" href="{{ url_for('calendar') }}">Ir para este mês</a>
+</div>
+<div class="calendar-stats">
+  <div class="calendar-stat"><span class="muted">Pendentes</span><strong>{{ task_stats.pending }}</strong></div>
+  <div class="calendar-stat"><span class="muted">Concluídas</span><strong>{{ task_stats.done }}</strong></div>
+  <div class="calendar-stat"><span class="muted">Atrasadas</span><strong>{{ task_stats.overdue }}</strong></div>
+</div>
+<div class="calendar-layout">
+  <section class="calendar-panel">
+    <h2>＋ Adicionar tarefa</h2>
+    <form class="calendar-form" method="post" action="{{ url_for('calendar') }}">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      <label>Nome da tarefa<input name="title" maxlength="160" required placeholder="Ex.: Pesquisar produtos em alta"></label>
+      <label>Tipo
+        <select name="task_type">
+          <option>Pesquisa de produtos</option><option>Preparar imagem</option><option>Preparar conteúdo</option><option>Publicação</option><option>Analisar resultados</option><option>Organização</option><option selected>Tarefa</option>
+        </select>
+      </label>
+      <label>Data e horário<input type="datetime-local" name="due_at" required value="{{ month_key }}-{{ '%02d'|format([1, selected_month.day]|max) }}T18:00"></label>
+      <label>Produto relacionado (opcional)<select name="product_id"><option value="">Nenhum produto</option>{% for product in products %}<option value="{{ product.id }}">{{ product.name }}</option>{% endfor %}</select></label>
+      <label>Observações<textarea name="description" maxlength="1000" placeholder="Detalhes ou próximos passos..."></textarea></label>
+      <button class="button" type="submit">Adicionar ao calendário</button>
+    </form>
+  </section>
+  <section class="calendar-panel">
+    <h2>Agenda de {{ selected_month.strftime('%B')|title }}</h2>
+    {% if tasks %}
+      {% for task in tasks %}
+      <article class="calendar-task">
+        <div class="calendar-task-title">{{ task.title }}</div>
+        <div class="calendar-task-meta"><span>{{ task.due_at.replace('T', ' às ') }}</span><span class="calendar-pill">{{ task.task_type }}</span></div>
+        {% if task.product_name %}<div class="calendar-task-meta">Produto: {{ task.product_name }}</div>{% endif %}
+        {% if task.description %}<div class="muted">{{ task.description }}</div>{% endif %}
+        <div class="calendar-task-actions">
+          <span class="calendar-pill {{ 'done' if task.status == 'Concluída' else ('overdue' if task.due_at < now|string and task.status != 'Concluída' else '') }}">{{ task.status }}</span>
+          <form method="post" action="{{ url_for('calendar_task_status', task_id=task.id) }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="mes" value="{{ month_key }}">
+            <select name="status" aria-label="Alterar status da tarefa" onchange="this.form.submit()">
+              {% for status in ['Pendente','Em andamento','Concluída'] %}<option {{ 'selected' if task.status == status else '' }}>{{ status }}</option>{% endfor %}
+            </select>
+          </form>
+        </div>
+      </article>
+      {% endfor %}
+    {% else %}
+      <div class="calendar-empty">Nenhuma tarefa neste mês. Adicione uma tarefa para começar a organizar sua operação.</div>
+    {% endif %}
+    {% if posts %}
+    <h2 style="margin-top:24px">Publicações já agendadas</h2>
+    {% for post in posts %}
+      <article class="calendar-task"><div class="calendar-task-title">{{ post.product_name or 'Conteúdo sem produto vinculado' }}</div><div class="calendar-task-meta"><span>{{ post.planned_at }}</span><span class="calendar-pill">{{ post.content_type|default('Conteúdo')|title }}</span><span class="calendar-pill">{{ post.status }}</span></div></article>
+    {% endfor %}
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

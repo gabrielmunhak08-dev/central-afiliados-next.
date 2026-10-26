@@ -10,10 +10,17 @@
 <div class="products-grid">
 {% for product in products %}
 <article class="product-card">
-  <a class="product-thumb" href="{{ url_for('product_form', product_id=product.id) }}">
-    {% if product.image_filename %}<img src="{{ url_for('uploaded_file', filename=product.image_filename) }}" alt="Foto de {{ product.name }}">
+  <div class="product-thumb{% if product.gallery_filenames|length > 1 %} has-gallery{% endif %}" data-gallery>
+    {% if product.gallery_filenames %}
+      {% for filename in product.gallery_filenames %}
+      <img class="product-gallery-image{% if loop.first %} is-active{% endif %}" src="{{ url_for('uploaded_file', filename=filename) }}" alt="Foto {{ loop.index }} de {{ product.name }}" loading="lazy" draggable="false">
+      {% endfor %}
+      {% if product.gallery_filenames|length > 1 %}
+      <span class="gallery-count" aria-live="polite">1 / {{ product.gallery_filenames|length }}</span>
+      <span class="gallery-hint">Deslize para ver mais</span>
+      {% endif %}
     {% else %}<span class="no-image">Sem foto</span>{% endif %}
-  </a>
+  </div>
   <div class="product-info">
     <p class="product-category">{{ product.category or 'Sem categoria' }}</p>
     <h2><a href="{{ url_for('product_form', product_id=product.id) }}">{{ product.name }}</a></h2>
@@ -28,3 +35,39 @@
 <section class="empty-state"><span class="empty-icon">＋</span><h2>Seu catálogo começa aqui</h2><p class="muted">{% if q %}Nenhum produto encontrado. Tente outro termo.{% else %}Cadastre seu primeiro produto para organizar o preço, link de afiliado e fotos.{% endif %}</p><a class="button" href="{{ url_for('product_form') }}">Cadastrar produto</a></section>
 {% endif %}
 {% endblock %}
+
+<script>
+(function () {
+  document.querySelectorAll('[data-gallery].has-gallery').forEach(function (gallery) {
+    const images = Array.from(gallery.querySelectorAll('.product-gallery-image'));
+    const counter = gallery.querySelector('.gallery-count');
+    let active = 0, startX = 0, startY = 0, mouseDown = false;
+    function show(index) {
+      active = (index + images.length) % images.length;
+      images.forEach(function (image, i) { image.classList.toggle('is-active', i === active); });
+      if (counter) counter.textContent = (active + 1) + ' / ' + images.length;
+    }
+    gallery.addEventListener('touchstart', function (event) {
+      if (!event.touches.length) return;
+      startX = event.touches[0].clientX; startY = event.touches[0].clientY;
+    }, {passive: true});
+    gallery.addEventListener('touchend', function (event) {
+      if (!event.changedTouches.length) return;
+      const dx = event.changedTouches[0].clientX - startX;
+      const dy = event.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) > 35 && Math.abs(dx) > Math.abs(dy) * 1.2) show(active + (dx < 0 ? 1 : -1));
+    }, {passive: true});
+    gallery.addEventListener('pointerdown', function (event) {
+      if (event.pointerType !== 'mouse') return;
+      mouseDown = true; startX = event.clientX; startY = event.clientY;
+    });
+    gallery.addEventListener('pointerup', function (event) {
+      if (!mouseDown) return;
+      mouseDown = false;
+      const dx = event.clientX - startX, dy = event.clientY - startY;
+      if (Math.abs(dx) > 35 && Math.abs(dx) > Math.abs(dy) * 1.2) show(active + (dx < 0 ? 1 : -1));
+    });
+    gallery.addEventListener('pointercancel', function () { mouseDown = false; });
+  });
+})();
+</script>

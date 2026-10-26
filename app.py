@@ -386,7 +386,7 @@ def create_app(test_config=None):
         q = request.args.get("q", "").strip()
         db = connect_db()
         try:
-            sql = """SELECT p.*, (SELECT COUNT(*) FROM product_images i WHERE i.product_id=p.id) AS extra_images FROM products p"""
+            sql = """SELECT p.*, (SELECT COUNT(*) FROM product_images i WHERE i.product_id=p.id) AS extra_images, EXISTS(SELECT 1 FROM posts po WHERE po.product_id=p.id AND po.status='Publicado') AS has_published FROM products p"""
             if q:
                 rows = db.execute(sql + " WHERE p.name LIKE ? OR p.category LIKE ? ORDER BY p.id DESC", (f"%{q}%", f"%{q}%")).fetchall()
             else:

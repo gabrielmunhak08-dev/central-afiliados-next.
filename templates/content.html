@@ -36,7 +36,7 @@
       <small id="product-search-help">Digite algumas letras e toque no produto correto. A foto aparece ao lado.</small>
     </label>
     <input type="hidden" name="product_id" id="content-product" required>
-    <div id="product-search-results" class="product-search-results" role="listbox" aria-label="Produtos encontrados">
+    <div id="product-search-results" class="product-search-results" role="listbox" aria-label="Produtos encontrados" hidden>
       {% for p in products %}
       <button type="button" class="product-search-option" role="option"
         data-id="{{ p.id }}" data-link="{{ p.affiliate_link|e }}" data-notes="{{ p.notes|e }}" data-name="{{ p.name|e }}"
@@ -93,6 +93,7 @@
 {% endif %}
 <style>
 .product-search-results{display:grid;gap:8px;margin-top:10px}
+.product-search-results[hidden]{display:none}
 .product-search-option{display:flex;align-items:center;gap:12px;width:100%;padding:10px;text-align:left;border:1px solid var(--border,#30343b);border-radius:12px;background:var(--card,#15181d);color:inherit;cursor:pointer}
 .product-search-option[hidden]{display:none}
 .product-search-option.selected{border-color:var(--accent,#ff6b00);box-shadow:0 0 0 1px var(--accent,#ff6b00)}
@@ -110,23 +111,31 @@ const productResults = document.getElementById('product-search-results');
 const productDetails = document.getElementById('product-details');
 if (productSearch && productResults && productIdField) {
   const options = Array.from(productResults.querySelectorAll('.product-search-option'));
+  const normalizeSearch = value => value.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLocaleLowerCase('pt-BR');
+  // Começa sem resultados; só exibe a lista quando houver texto de busca.
+  options.forEach(item => { item.hidden = true; });
+  productResults.hidden = true;
   productSearch.addEventListener('input', function () {
-    const term = this.value.trim().toLocaleLowerCase('pt-BR');
+    const rawTerm = this.value.trim();
+    const term = normalizeSearch(rawTerm);
     let count = 0;
     options.forEach(function (item) {
-      const match = (item.dataset.name + ' ' + item.dataset.category).toLocaleLowerCase('pt-BR').includes(term);
+      const searchable = normalizeSearch(item.dataset.name + ' ' + item.dataset.category);
+      const match = term.length > 0 && searchable.includes(term);
       item.hidden = !match;
       if (match) count++;
     });
+    productResults.hidden = term.length === 0;
     productResults.classList.toggle('is-empty', count === 0);
     let empty = productResults.querySelector('.product-search-empty');
-    if (!count) {
+    if (term.length > 0 && !count) {
       if (!empty) { empty = document.createElement('p'); empty.className = 'product-search-empty muted'; productResults.appendChild(empty); }
       empty.textContent = 'Nenhum produto encontrado. Confira o nome ou cadastre o produto primeiro.';
     } else if (empty) empty.remove();
-    if (productIdField.value && !options.some(item => item.dataset.id === productIdField.value && !item.hidden)) {
+    if (!term.length || (productIdField.value && !options.some(item => item.dataset.id === productIdField.value && !item.hidden))) {
       productIdField.value = '';
-      productDetails.textContent = 'Selecione um produto da lista.';
+      options.forEach(item => { item.classList.remove('selected'); item.setAttribute('aria-selected', 'false'); });
+      productDetails.textContent = 'Pesquise e selecione um produto para ver os dados salvos.';
     }
   });
   options.forEach(function (item) {
@@ -137,6 +146,7 @@ if (productSearch && productResults && productIdField) {
       productIdField.value = this.dataset.id;
       productSearch.value = this.dataset.name;
       options.forEach(other => { other.hidden = other !== this; });
+      productResults.hidden = false;
       productResults.classList.remove('is-empty');
       const notes = this.dataset.notes || 'Sem descrição cadastrada.';
       const link = this.dataset.link || 'Nenhum link de afiliado cadastrado.';

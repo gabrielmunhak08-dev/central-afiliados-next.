@@ -102,6 +102,12 @@ def create_app(test_config=None):
                     value TEXT NOT NULL DEFAULT ''
                 );
             """)
+            # Categorias iniciais e categorias já usadas nos produtos, sem apagar dados.
+            initial_categories = ["Academia", "Corrida", "Pesca", "Moda feminina", "Moda masculina", "Moda infantil", "Suplementos", "Eletrônicos", "Celulares e acessórios", "Casa e decoração", "Cozinha", "Beleza", "Cuidados pessoais", "Pets", "Automotivo", "Games", "Esportes", "Camping e aventura", "Ferramentas", "Brinquedos", "Papelaria", "Bebês", "Calçados", "Bolsas e acessórios", "Relógios e joias", "Jardim", "Mercado", "Livros", "Móveis", "Viagem", "Diversos"]
+            for category_name in initial_categories:
+                db.execute("INSERT OR IGNORE INTO categories (name) VALUES (?)", (category_name,))
+            for category_row in db.execute("SELECT DISTINCT TRIM(category) AS name FROM products WHERE TRIM(category) <> ''").fetchall():
+                db.execute("INSERT OR IGNORE INTO categories (name) VALUES (?)", (category_row["name"],))
             # Migração segura para usuários e publicações, sem apagar dados existentes.
             user_columns = {row[1] for row in db.execute("PRAGMA table_info(users)").fetchall()}
             if "is_admin" not in user_columns:

@@ -527,3 +527,9 @@ body:has(.content-tabs) .empty-state { padding:clamp(30px,6vw,60px); border-styl
  body:has(.content-tabs) .content-card { padding:15px; }
  body:has(.content-tabs) .status-form { align-items:stretch; }
 }
+
+
+/* Indicador de produto que já teve publicação marcada como publicada */
+.product-card-labels { display:flex; align-items:center; min-height:0; margin:0 0 8px; }
+.product-posted-badge { display:inline-flex; align-items:center; gap:5px; padding:5px 9px; border:1px solid #269b68; border-radius:999px; background:rgba(38,155,104,.13); color:#38c985; font-size:.7rem; font-weight:850; letter-spacing:.01em; }
+:root[data-theme="light"] .product-posted-badge { background:rgba(24,128,82,.09); color:#167447; }

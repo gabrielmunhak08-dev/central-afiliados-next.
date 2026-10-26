@@ -37,7 +37,7 @@ function testAffiliateLink() {
 <form class="form-card" method="post" enctype="multipart/form-data">
 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 <label>Nome do produto<input name="name" required maxlength="180" value="{{ product.name if product else (draft.name if draft is defined else '') }}" placeholder="Ex.: Tênis de corrida"></label>
-<div class="form-row category-field"><label>Categoria<input name="category" id="category-input" maxlength="80" autocomplete="off" value="{{ product.category if product else (draft.category if draft is defined else '') }}" placeholder="Comece a digitar: academia, pesca..."></label><div id="category-count-list" style="display:none;flex-direction:column;gap:4px;margin-top:4px">{% for cat in categories|default([]) %}<button type="button" class="category-choice" data-category="{{ cat.name }}" data-count="{{ cat.product_count }}" style="display:none;text-align:left;width:100%;padding:9px 12px;border:1px solid var(--border-color, #333);border-radius:8px;background:var(--card, #17191d);color:inherit">{{ cat.name }} <span style="opacity:.75">· {{ cat.product_count }} produto(s)</span></button>{% endfor %}</div><small>Digite para ver as categorias correspondentes e quantos produtos há em cada uma. Se não existir, você pode cadastrar uma nova.</small></div><label>Preço do produto<div class="currency-input"><span aria-hidden="true">R$</span><input name="price" inputmode="decimal" value="{{ product.price if product and product.price is not none else (draft.price if draft is defined else '') }}" placeholder="23,50" required></div></label></div>
+<div class="form-row category-field"><label>Categoria<input name="category" id="category-input" maxlength="80" autocomplete="off" value="{{ product.category if product else (draft.category if draft is defined else '') }}" placeholder="Comece a digitar: academia, pesca..."></label><div id="category-count-list" hidden style="flex-direction:column;gap:4px;margin-top:4px">{% for cat in categories|default([]) %}<button type="button" class="category-choice" data-category="{{ cat.name }}" data-count="{{ cat.product_count }}" hidden style="text-align:left;width:100%;padding:9px 12px;border:1px solid var(--border-color, #333);border-radius:8px;background:var(--card, #17191d);color:inherit">{{ cat.name }} <span style="opacity:.75">· {{ cat.product_count }} produto(s)</span></button>{% endfor %}</div><small>Digite para ver as categorias correspondentes e quantos produtos há em cada uma. Se não existir, você pode cadastrar uma nova.</small></div><label>Preço do produto<div class="currency-input"><span aria-hidden="true">R$</span><input name="price" inputmode="decimal" value="{{ product.price if product and product.price is not none else (draft.price if draft is defined else '') }}" placeholder="23,50" required></div></label></div>
 <label>Comissão<div class="currency-input percent-input"><input name="commission" inputmode="decimal" value="{{ product.commission if product and product.commission is not none else (draft.commission if draft is defined else '') }}" placeholder="20"><span aria-hidden="true">%</span></div><small>Informe a porcentagem de comissão indicada pela Shopee, de 0 a 100%.</small></label>
 <label>Link de afiliado Shopee<div class="form-row"><input type="url" name="affiliate_link" id="affiliate-link" value="{{ product.affiliate_link if product else (draft.affiliate_link if draft is defined else '') }}" placeholder="https://..."><button class="button button-quiet" type="button" onclick="testAffiliateLink()">Testar link</button></div><small>Abre o link que está neste campo, sem modificá-lo.</small></label>
 <label>Observações / descrição<textarea name="notes" rows="4" maxlength="3000" placeholder="Detalhes confirmados do produto">{{ product.notes if product else (draft.notes if draft is defined else '') }}</textarea></label>
@@ -53,30 +53,32 @@ function testAffiliateLink() {
  if(!field||!panel)return;
  const choices=Array.from(panel.querySelectorAll('.category-choice'));
  function norm(value){return (value||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();}
+ function close(){panel.hidden=true;choices.forEach(function(button){button.hidden=true;});}
  function update(){
    const query=norm(field.value);
    let matches=0;
    choices.forEach(function(button){
-     const match=!!query && norm(button.dataset.category).includes(query);
-     button.style.display=match?'block':'none';
+     const match=query.length>0 && norm(button.dataset.category).includes(query);
+     button.hidden=!match;
      if(match)matches++;
    });
+   panel.hidden=matches===0;
    panel.style.display=matches?'flex':'none';
  }
  choices.forEach(function(button){
    button.addEventListener('click',function(){
      field.value=button.dataset.category;
-     panel.style.display='none';
+     close();
      field.dispatchEvent(new Event('change',{bubbles:true}));
    });
  });
  field.addEventListener('input',update);
  field.addEventListener('focus',update);
  document.addEventListener('click',function(event){
-   if(!event.target.closest('.category-field'))panel.style.display='none';
+   if(!event.target.closest('.category-field'))close();
  });
  field.addEventListener('keydown',function(event){
-   if(event.key==='Escape')panel.style.display='none';
+   if(event.key==='Escape')close();
  });
 })();
 </script>

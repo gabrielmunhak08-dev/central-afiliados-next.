@@ -392,6 +392,12 @@ def create_app(test_config=None):
             else:
                 rows = db.execute(sql + " ORDER BY p.id DESC").fetchall()
             products_data = [dict(row) for row in rows]
+            for product in products_data:
+                photo_rows = db.execute(
+                    "SELECT filename FROM product_images WHERE product_id=? ORDER BY id",
+                    (product["id"],)
+                ).fetchall()
+                product["gallery_filenames"] = ([product["image_filename"]] if product["image_filename"] else []) + [photo["filename"] for photo in photo_rows]
         finally:
             db.close()
         return render_template("products.html", products=products_data, q=q)

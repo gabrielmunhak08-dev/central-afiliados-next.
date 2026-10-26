@@ -1,15 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Editar produto' if product else 'Novo produto' }} · Central<script>
-(function(){
- const field=document.querySelector('input[name="category"]');
- const choices=[...document.querySelectorAll('.category-choice')];
- if(!field) return;
- function norm(v){return (v||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();}
- choices.forEach(btn=>btn.addEventListener('click',()=>{field.value=btn.dataset.category;field.dispatchEvent(new Event('change',{bubbles:true}));}));
- field.addEventListener('input',()=>{const q=norm(field.value);choices.forEach(btn=>{btn.style.display=(!q||norm(btn.dataset.category).includes(q))?'':'none';});});
-})();
-</script>
-{% endblock %}
+{% block title %}{{ 'Editar produto' if product else 'Novo produto' }} · Central{% endblock %}
 {% block content %}
 <script>
 function testAffiliateLink() {
@@ -47,7 +37,7 @@ function testAffiliateLink() {
 <form class="form-card" method="post" enctype="multipart/form-data">
 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 <label>Nome do produto<input name="name" required maxlength="180" value="{{ product.name if product else (draft.name if draft is defined else '') }}" placeholder="Ex.: Tênis de corrida"></label>
-<div class="form-row"><label>Categoria<input name="category" list="category-suggestions" maxlength="80" value="{{ product.category if product else (draft.category if draft is defined else '') }}" placeholder="Digite ou escolha uma categoria..."></label><datalist id="category-suggestions"><option value="Academia"><option value="Corrida"><option value="Pesca"><option value="Moda feminina"><option value="Moda masculina"><option value="Moda infantil"><option value="Suplementos"><option value="Eletrônicos"><option value="Celulares e acessórios"><option value="Casa e decoração"><option value="Cozinha"><option value="Beleza"><option value="Cuidados pessoais"><option value="Pets"><option value="Automotivo"><option value="Games"><option value="Esportes"><option value="Camping e aventura"><option value="Ferramentas"><option value="Brinquedos"><option value="Papelaria"><option value="Bebês"><option value="Calçados"><option value="Bolsas e acessórios"><option value="Relógios e joias"><option value="Jardim"><option value="Mercado"><option value="Livros"><option value="Móveis"><option value="Viagem"><option value="Diversos"></datalist><div id="category-count-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">{% for cat in categories|default([]) %}<button type="button" class="button button-secondary category-choice" data-category="{{ cat.name }}" style="font-size:12px;padding:5px 8px">{{ cat.name }} · {{ cat.product_count }}</button>{% endfor %}</div><small>Toque numa categoria para selecioná-la; o número indica quantos produtos já estão nela. Você também pode digitar uma categoria nova.</small><label>Preço do produto<div class="currency-input"><span aria-hidden="true">R$</span><input name="price" inputmode="decimal" value="{{ product.price if product and product.price is not none else (draft.price if draft is defined else '') }}" placeholder="23,50" required></div></label></div>
+<div class="form-row category-field"><label>Categoria<input name="category" id="category-input" maxlength="80" autocomplete="off" value="{{ product.category if product else (draft.category if draft is defined else '') }}" placeholder="Comece a digitar: academia, pesca..."></label><div id="category-count-list" style="display:none;flex-direction:column;gap:4px;margin-top:4px">{% for cat in categories|default([]) %}<button type="button" class="category-choice" data-category="{{ cat.name }}" data-count="{{ cat.product_count }}" style="display:none;text-align:left;width:100%;padding:9px 12px;border:1px solid var(--border-color, #333);border-radius:8px;background:var(--card, #17191d);color:inherit">{{ cat.name }} <span style="opacity:.75">· {{ cat.product_count }} produto(s)</span></button>{% endfor %}</div><small>Digite para ver as categorias correspondentes e quantos produtos há em cada uma. Se não existir, você pode cadastrar uma nova.</small></div><label>Preço do produto<div class="currency-input"><span aria-hidden="true">R$</span><input name="price" inputmode="decimal" value="{{ product.price if product and product.price is not none else (draft.price if draft is defined else '') }}" placeholder="23,50" required></div></label></div>
 <label>Comissão<div class="currency-input percent-input"><input name="commission" inputmode="decimal" value="{{ product.commission if product and product.commission is not none else (draft.commission if draft is defined else '') }}" placeholder="20"><span aria-hidden="true">%</span></div><small>Informe a porcentagem de comissão indicada pela Shopee, de 0 a 100%.</small></label>
 <label>Link de afiliado Shopee<div class="form-row"><input type="url" name="affiliate_link" id="affiliate-link" value="{{ product.affiliate_link if product else (draft.affiliate_link if draft is defined else '') }}" placeholder="https://..."><button class="button button-quiet" type="button" onclick="testAffiliateLink()">Testar link</button></div><small>Abre o link que está neste campo, sem modificá-lo.</small></label>
 <label>Observações / descrição<textarea name="notes" rows="4" maxlength="3000" placeholder="Detalhes confirmados do produto">{{ product.notes if product else (draft.notes if draft is defined else '') }}</textarea></label>
@@ -56,4 +46,38 @@ function testAffiliateLink() {
 {% if product %}<h2>Fotos adicionais</h2><p class="muted">Toque em “Usar como principal” para trocar a foto principal. A foto anterior continua salva na galeria.</p>{% for photo in product_photos %}<div class="photo-row"><img class="form-thumb" src="{{ url_for('static', filename='uploads/' ~ photo.filename) }}" alt="Foto adicional"><span>Foto adicional</span><button class="button button-quiet button-small" type="submit" form="set-main-photo-{{ photo.id }}">Usar como principal</button></div>{% else %}<p class="muted">Nenhuma foto adicional.</p>{% endfor %}{% endif %}
 <div class="form-row form-actions"><button class="button" type="submit">Salvar produto</button>{% if product %}<button class="button button-danger" type="submit" form="delete-product-form" onclick="return confirm('Excluir este produto e todas as fotos dele? Publicações já criadas continuarão, mas ficarão sem vínculo com o produto.');">Excluir produto</button>{% endif %}</div></form>
 {% if product %}<form id="delete-product-form" method="post" action="{{ url_for('product_delete', product_id=product.id) }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"></form>{% endif %}
+<script>
+(function(){
+ const field=document.getElementById('category-input');
+ const panel=document.getElementById('category-count-list');
+ if(!field||!panel)return;
+ const choices=Array.from(panel.querySelectorAll('.category-choice'));
+ function norm(value){return (value||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();}
+ function update(){
+   const query=norm(field.value);
+   let matches=0;
+   choices.forEach(function(button){
+     const match=!!query && norm(button.dataset.category).includes(query);
+     button.style.display=match?'block':'none';
+     if(match)matches++;
+   });
+   panel.style.display=matches?'flex':'none';
+ }
+ choices.forEach(function(button){
+   button.addEventListener('click',function(){
+     field.value=button.dataset.category;
+     panel.style.display='none';
+     field.dispatchEvent(new Event('change',{bubbles:true}));
+   });
+ });
+ field.addEventListener('input',update);
+ field.addEventListener('focus',update);
+ document.addEventListener('click',function(event){
+   if(!event.target.closest('.category-field'))panel.style.display='none';
+ });
+ field.addEventListener('keydown',function(event){
+   if(event.key==='Escape')panel.style.display='none';
+ });
+})();
+</script>
 {% endblock %}

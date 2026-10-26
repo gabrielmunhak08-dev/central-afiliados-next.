@@ -23,6 +23,9 @@
     {% else %}<span class="no-image">Sem foto</span>{% endif %}
   </div>
   <div class="product-info">
+    <div class="product-card-labels">
+      {% if product.has_published %}<span class="product-posted-badge">✓ Postado</span>{% endif %}
+    </div>
     <p class="product-category">{{ product.category or 'Sem categoria' }}</p>
     <h2><a href="{{ url_for('product_form', product_id=product.id) }}">{{ product.name }}</a></h2>
     <p class="product-price">{% if product.price is not none %}R$ {{ '%.2f'|format(product.price)|replace('.', ',') }}{% else %}Preço não informado{% endif %}</p>

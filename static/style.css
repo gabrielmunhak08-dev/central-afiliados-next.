@@ -179,3 +179,12 @@ footer{text-align:center;color:#727c89;font-size:.78rem;padding:22px;border-top:
 /* Espaçamento dos cartões principais sem título duplicado. */
 .module-card-primary p{margin:14px 0 22px}
 .module-card-primary .button{align-self:flex-start}
+
+
+/* Galeria deslizante das fotos nos cartões de produto. */
+.product-thumb{position:relative;overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab}
+.product-thumb:active{cursor:grabbing}
+.product-thumb .product-gallery-image{display:none;width:100%;height:100%;object-fit:contain}
+.product-thumb .product-gallery-image.is-active{display:block}
+.gallery-count{position:absolute;right:9px;bottom:9px;padding:5px 8px;border:1px solid #ffffff24;border-radius:99px;background:#080a0dcc;color:#fff;font-size:.72rem;font-weight:750;pointer-events:none}
+.gallery-hint{position:absolute;left:9px;bottom:9px;padding:5px 8px;border-radius:99px;background:#080a0dcc;color:#fff;font-size:.68rem;pointer-events:none;opacity:.85}

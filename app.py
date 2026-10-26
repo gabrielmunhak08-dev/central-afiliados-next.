@@ -493,7 +493,8 @@ def create_app(test_config=None):
         allowed_hosts = ("shopee.com.br", "shope.ee")
         if parsed.scheme != "https" or not any(host == h or host.endswith("." + h) for h in allowed_hosts):
             flash("Cole um link HTTPS válido da Shopee. O link de afiliado será preservado exatamente como você enviou.", "error")
-            return render_template("product_form.html", product=None, product_photos=[], draft=draft)
+            categories = db.execute("""SELECT c.name, COUNT(p.id) AS product_count FROM categories c LEFT JOIN products p ON LOWER(TRIM(p.category)) = LOWER(TRIM(c.name)) GROUP BY c.id, c.name ORDER BY c.name COLLATE NOCASE""").fetchall()
+            return render_template("product_form.html", product=None, product_photos=[], draft=draft, categories=categories)
 
         try:
             req = urllib.request.Request(
@@ -584,6 +585,8 @@ def create_app(test_config=None):
             if request.method == "POST":
                 name = request.form.get("name", "").strip()
                 category = request.form.get("category", "").strip()
+                if category:
+                    db.execute("INSERT OR IGNORE INTO categories (name) VALUES (?)", (category,))
                 link = request.form.get("affiliate_link", "").strip()
                 notes = request.form.get("notes", "").strip()
                 try:
@@ -628,7 +631,8 @@ def create_app(test_config=None):
                 flash("Produto salvo.", "success")
                 return redirect(url_for("products"))
             extras = db.execute("SELECT id, filename FROM product_images WHERE product_id=? ORDER BY id", (product_id,)).fetchall() if product_id else []
-            return render_template("product_form.html", product=product, product_photos=extras)
+            categories = db.execute("""SELECT c.name, COUNT(p.id) AS product_count FROM categories c LEFT JOIN products p ON LOWER(TRIM(p.category)) = LOWER(TRIM(c.name)) GROUP BY c.id, c.name ORDER BY c.name COLLATE NOCASE""").fetchall()
+            return render_template("product_form.html", product=product, product_photos=extras, categories=categories)
         finally:
             db.close()
 

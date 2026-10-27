@@ -1,22 +1,31 @@
 {% extends "base.html" %}
-{% block title %}Entrar · Central de Afiliados{% endblock %}
+{% block title %}Entrar · Central Afiliados{% endblock %}
 {% block content %}
-<section class="auth-card">
-  <p class="eyebrow">ACESSO SEGURO · WORKSPACE</p>
-  <h1>Seu próximo nível começa <span class="accent">aqui.</span></h1>
-  <p class="muted">Entre na sua central para planejar conteúdos, organizar produtos e acompanhar sua operação.</p>
-  <form method="post" class="form-stack">
-    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-    <label for="username">Usuário</label>
-    <input id="username" name="username" autocomplete="username" placeholder="Digite seu usuário" autocapitalize="none" required>
-    <label for="password">Senha</label>
-    <div class="password-field">
-      <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Digite sua senha" required>
-      <button class="password-toggle" type="button" id="toggle-password" aria-label="Mostrar senha" aria-pressed="false" title="Mostrar senha"><svg class="eye-icon eye-closed" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8M9.9 5.2A11.5 11.5 0 0112 5c5 0 8.5 4.5 9.5 7a12.8 12.8 0 01-3.1 4.2M6.2 6.2A13 13 0 002.5 12c1 2.5 4.5 7 9.5 7 1.3 0 2.5-.3 3.6-.8"/></svg><svg class="eye-icon eye-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+<section class="login-screen">
+  <div class="login-decoration login-decoration-top" aria-hidden="true"></div>
+  <div class="login-decoration login-decoration-bottom" aria-hidden="true"></div>
+  <section class="login-card" aria-labelledby="login-title">
+    <div class="login-logo" aria-hidden="true">
+      <svg viewBox="0 0 64 72" fill="none"><path d="M13 22h38l-3.2 40H16.2L13 22Z" fill="currentColor"/><path d="M23 24V17a9 9 0 0 1 18 0v7" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M38 34c-2-3-12-4-12 2 0 7 14 3 14 11 0 7-11 9-17 3" stroke="#10151d" stroke-width="3.5" stroke-linecap="round"/></svg>
     </div>
-    <button class="button" type="submit">Entrar na Central <span aria-hidden="true">→</span></button>
-  </form>
-  <p class="small-note">AMBIENTE PRIVADO · SEUS DADOS, SUA OPERAÇÃO.</p>
+    <h1 id="login-title">Central Afiliados</h1>
+    <p class="login-subtitle">Entre para acessar seu painel.</p>
+    <form method="post" class="login-form">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      <label class="login-input-wrap" for="username">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>
+        <input id="username" name="username" autocomplete="username" placeholder="Usuário" autocapitalize="none" required>
+      </label>
+      <label class="login-input-wrap login-password-wrap" for="password">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Senha" required>
+        <button class="login-password-toggle" type="button" id="toggle-password" aria-label="Mostrar senha" aria-pressed="false" title="Mostrar senha"><svg class="eye-icon eye-closed" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.2A11.5 11.5 0 0 1 12 5c5 0 8.5 4.5 9.5 7a12.8 12.8 0 0 1-3.1 4.2M6.2 6.2A13 13 0 0 0 2.5 12c1 2.5 4.5 7 9.5 7 1.3 0 2.5-.3 3.6-.8"/></svg><svg class="eye-icon eye-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+      </label>
+      <button class="login-submit" type="submit">Entrar <span aria-hidden="true">→</span></button>
+    </form>
+    <p class="login-footer">Aproveite o poder do seu link!</p>
+    <div class="login-dots" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+  </section>
 </section>
 <script>
   (() => {

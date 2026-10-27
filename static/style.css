@@ -621,3 +621,34 @@ body:has(.auth-card) .version{color:#7f8998}
  body:has(.auth-card) .page{min-height:calc(100svh - 130px);padding:20px 14px 32px}
  body:has(.auth-card) .auth-card{border-radius:21px;padding:27px 22px}
 }
+
+
+/* Login mobile inspirado na referência enviada; escopo restrito à tela de acesso. */
+body:has(.login-screen){min-height:100dvh;background:#080b10;color:#f3f5f7}
+body:has(.login-screen) .topbar,body:has(.login-screen) .app-footer{display:none}
+body:has(.login-screen) .page{width:100%;max-width:none;min-height:100dvh;padding:0;margin:0;display:flex}
+.login-screen{position:relative;isolation:isolate;display:grid;place-items:center;overflow:hidden;width:100%;min-height:100dvh;padding:28px 16px;background:radial-gradient(ellipse at 50% 38%,#121b27 0%,#080b10 68%)}
+.login-card{position:relative;z-index:1;width:min(100%,430px);min-height:min(690px,calc(100dvh - 32px));display:flex;flex-direction:column;justify-content:center;padding:clamp(24px,7vw,38px);border:1px solid #34404e;border-radius:24px;background:linear-gradient(155deg,#111923f5,#080d14f7 72%);box-shadow:0 24px 80px #0008;overflow:hidden}
+.login-decoration{position:absolute;z-index:0;width:210px;height:210px;pointer-events:none;opacity:.95}
+.login-decoration-top{top:-80px;left:-70px;background:linear-gradient(135deg,#ff6b00 0 28%,#ff8a19 28% 39%,#522b14 39% 48%,transparent 48%);transform:rotate(0deg)}
+.login-decoration-bottom{right:-90px;bottom:-100px;background:linear-gradient(315deg,#ff6b00 0 25%,#ff8a19 25% 36%,#512a14 36% 45%,transparent 45%)}
+.login-logo{width:76px;height:82px;margin:0 auto 10px;display:grid;place-items:center;color:#ff6b00}
+.login-logo svg{width:68px;height:76px}
+.login-card h1{font-size:clamp(1.8rem,7vw,2.25rem);line-height:1.15;letter-spacing:-.8px;text-align:center;margin:0;color:#f7f8fa}
+.login-subtitle{text-align:center;color:#c1c8d2;font-size:.94rem;margin:12px 0 25px}
+.login-form{display:flex;flex-direction:column;gap:13px;margin-top:0}
+.login-input-wrap{position:relative;display:flex;align-items:center;min-height:54px;border:1px solid #405064;border-radius:12px;background:#101b29;box-shadow:inset 0 1px 0 #ffffff08;transition:border-color .18s,box-shadow .18s}
+.login-input-wrap:focus-within{border-color:#ff6b00;box-shadow:0 0 0 3px #ff6b0026}
+.login-input-wrap>svg{position:absolute;left:14px;width:20px;height:20px;fill:none;stroke:#cbd3de;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.login-input-wrap input{width:100%;min-width:0;min-height:52px;padding:12px 14px 12px 48px;border:0;border-radius:12px;background:transparent;color:#f3f5f7;font:inherit;outline:none}
+.login-input-wrap input::placeholder{color:#aeb9c8;opacity:1}
+.login-password-wrap input{padding-right:52px}
+.login-password-toggle{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:40px;height:40px;display:grid;place-items:center;border:0;border-radius:9px;background:transparent;color:#d7dee8;cursor:pointer}
+.login-password-toggle:active{transform:translateY(-50%) scale(.95)}
+.login-password-toggle .eye-icon{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.login-password-toggle .eye-open{display:none}.login-password-toggle.is-visible .eye-open{display:block}.login-password-toggle.is-visible .eye-closed{display:none}
+.login-submit{display:flex;align-items:center;justify-content:center;gap:12px;min-height:54px;margin-top:6px;padding:13px 18px;border:0;border-radius:12px;background:linear-gradient(100deg,#ff6b00,#ff7900);color:#fff;font:inherit;font-weight:800;box-shadow:0 8px 22px #ff6b0029;cursor:pointer;transition:filter .15s,transform .15s}
+.login-submit:hover{filter:brightness(1.07)}.login-submit:active{transform:scale(.99)}.login-submit span{font-size:1.3rem;line-height:1}
+.login-footer{margin:35px 0 16px;text-align:center;color:#c0c8d3;font-size:.83rem}
+.login-dots{display:flex;justify-content:center;gap:9px}.login-dots span{width:5px;height:5px;border-radius:50%;background:#ff6b00;box-shadow:0 0 8px #ff6b0055}
+@media(max-height:620px){.login-screen{padding:12px}.login-card{min-height:0;padding:24px}.login-logo{width:52px;height:55px;margin-bottom:5px}.login-logo svg{width:48px;height:52px}.login-subtitle{margin:8px 0 14px}.login-footer{margin:18px 0 12px}}

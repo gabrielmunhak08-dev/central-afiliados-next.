@@ -691,3 +691,82 @@ body:has(.login-screen) .page{width:100%;max-width:none;min-height:100dvh;paddin
  .drawer-footer form{margin:0}
 }
 @media(min-width:761px){.mobile-menu-button,.mobile-drawer,.drawer-backdrop{display:none!important}}
+
+
+/* Cabeçalho refinado: botões alinhados e recolhimento funcional no desktop. */
+.topbar{
+  display:flex;align-items:center;gap:14px;min-width:0;
+}
+.topbar .brand{flex:0 0 auto;min-width:0}
+.top-nav{
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  min-width:0;flex:1;margin:0 6px;padding:4px;
+  border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.025);
+}
+.topbar .top-nav-link{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:39px;padding:9px 13px;border:1px solid transparent;border-radius:9px;
+  color:var(--muted);font:inherit;font-size:.84rem;font-weight:700;line-height:1.2;
+  white-space:nowrap;text-decoration:none!important;transition:background .16s,color .16s,border-color .16s;
+}
+.topbar .top-nav-link:hover,.topbar .top-nav-link:focus-visible{
+  color:var(--text);background:var(--panel2);outline:none;
+}
+.topbar .top-nav-link.active{
+  color:var(--text);background:rgba(255,107,0,.13);border-color:rgba(255,107,0,.28);
+}
+.topbar .account{
+  display:flex;align-items:center;justify-content:flex-end;gap:9px;flex:0 0 auto;min-width:0;
+}
+.topbar .user-pill{
+  display:inline-flex;align-items:center;gap:8px;min-height:36px;max-width:170px;
+  padding:7px 11px;border:1px solid var(--line);border-radius:999px;
+  color:var(--text);font-size:.81rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.topbar .appearance-menu{position:relative;flex:0 0 auto}
+.topbar .icon-button{
+  display:inline-grid;place-items:center;width:39px;height:39px;padding:0;
+  border:1px solid var(--line);border-radius:11px;background:var(--panel);
+  color:var(--text);cursor:pointer;list-style:none;transition:border-color .16s,background .16s;
+}
+.topbar .icon-button::-webkit-details-marker{display:none}
+.topbar .icon-button svg{width:19px;height:19px}
+.topbar .icon-button:hover,.topbar .icon-button:focus-visible{border-color:var(--orange);outline:none}
+.topbar .logout-button{
+  display:inline-flex;align-items:center;justify-content:center;min-height:38px;
+  padding:8px 12px;border:1px solid var(--line);border-radius:10px;
+  background:transparent;color:var(--muted);font:inherit;font-size:.82rem;font-weight:700;
+  line-height:1;white-space:nowrap;cursor:pointer;transition:background .16s,border-color .16s,color .16s;
+}
+.topbar .logout-button:hover,.topbar .logout-button:focus-visible{
+  color:var(--text);background:var(--panel2);border-color:#596273;outline:none;
+}
+.topbar .account form{display:flex;align-items:center;margin:0}
+.topbar-collapse-button{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;flex:0 0 auto;
+  min-height:37px;padding:8px 11px;border:1px solid var(--line);border-radius:10px;
+  background:var(--panel);color:var(--muted);font:inherit;font-size:.76rem;font-weight:750;
+  line-height:1;white-space:nowrap;cursor:pointer;transition:background .16s,border-color .16s,color .16s;
+}
+.topbar-collapse-button:hover,.topbar-collapse-button:focus-visible{
+  color:var(--text);background:var(--panel2);border-color:var(--orange);outline:none;
+}
+.collapse-button-icon{display:inline-block;color:var(--orange);font-size:1.05rem;font-weight:900;line-height:1}
+body.topbar-collapsed .topbar .top-nav,
+body.topbar-collapsed .topbar #topbar-optional{display:none!important}
+body.topbar-collapsed .topbar{justify-content:space-between}
+body.topbar-collapsed .topbar-collapse-button{margin-left:auto}
+@media(max-width:900px) and (min-width:761px){
+  .topbar{gap:8px;padding-inline:16px}
+  .topbar .top-nav{gap:2px}
+  .topbar .top-nav-link{padding-inline:8px;font-size:.78rem}
+  .topbar .user-pill{max-width:112px;padding-inline:8px}
+  .topbar-collapse-button{padding-inline:9px}
+  .collapse-button-label{font-size:0}
+  .collapse-button-icon{font-size:1.25rem}
+}
+@media(max-width:760px){
+  .topbar .top-nav,.topbar .account,.topbar-collapse-button{display:none!important}
+  .topbar .brand{flex:1}
+  .mobile-menu-button{flex:0 0 auto;margin-left:auto}
+}

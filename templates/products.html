@@ -30,7 +30,7 @@
     <h2><a href="{{ url_for('product_form', product_id=product.id) }}">{{ product.name }}</a></h2>
     <p class="product-price">{% if product.price is not none %}R$ {{ '%.2f'|format(product.price)|replace('.', ',') }}{% else %}Preço não informado{% endif %}</p>
     <p class="muted small-note">{{ (1 if product.image_filename else 0) + product.extra_images }} / 10 fotos</p>
-    <a class="text-link" href="{{ url_for('product_form', product_id=product.id) }}">Ver / editar produto →</a>
+    <a class="product-edit-link" href="{{ url_for('product_form', product_id=product.id) }}"><span>Ver / editar produto</span><span class="product-edit-arrow" aria-hidden="true">→</span></a>
   </div>
 </article>
 {% endfor %}
@@ -38,6 +38,66 @@
 {% else %}
 <section class="empty-state"><span class="empty-icon">＋</span><h2>Seu catálogo começa aqui</h2><p class="muted">{% if q %}Nenhum produto encontrado. Tente outro termo.{% else %}Cadastre seu primeiro produto para organizar o preço, link de afiliado e fotos.{% endif %}</p><a class="button" href="{{ url_for('product_form') }}">Cadastrar produto</a></section>
 {% endif %}
+
+<style>
+/* Refinamento localizado do catálogo: não altera as demais telas. */
+.products-grid { gap: 18px; }
+.product-card {
+  display: flex; flex-direction: column; min-width: 0;
+  border-color: #303946; border-radius: 20px;
+  background: linear-gradient(155deg, #171c24 0%, #11151b 82%);
+  box-shadow: 0 10px 30px rgba(0,0,0,.14);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.product-thumb {
+  position: relative; flex: 0 0 auto; height: clamp(190px, 26vw, 250px);
+  overflow: hidden; border-bottom: 1px solid rgba(255,255,255,.06);
+  background: radial-gradient(ellipse at center, #202630 0%, #0b0e13 78%);
+}
+.product-thumb img { padding: 12px; }
+.product-info {
+  display: flex; flex: 1; flex-direction: column; align-items: flex-start; padding: 18px;
+}
+.product-card-labels { min-height: 22px; }
+.product-info h2 { margin: 7px 0 5px; line-height: 1.35; }
+.product-price { margin: 6px 0 0; font-size: 1.15rem; letter-spacing: -.2px; }
+.product-info .small-note { margin: 8px 0 18px; }
+.product-edit-link {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  width: 100%; min-height: 48px; margin-top: auto; padding: 8px 9px 8px 15px;
+  border: 1px solid rgba(255,122,26,.42); border-radius: 13px;
+  background: linear-gradient(110deg, rgba(255,107,0,.15), rgba(255,107,0,.055));
+  color: #ff9a52; font-size: .9rem; font-weight: 800; text-decoration: none;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+.product-edit-link:focus-visible { outline: 2px solid #ffd0ad; outline-offset: 3px; }
+.product-edit-arrow {
+  display: grid; place-items: center; flex: 0 0 30px; width: 30px; height: 30px;
+  border-radius: 9px; background: #ff6b00; color: #17100a; font-size: 1.2rem;
+  line-height: 1; transition: transform .18s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .product-card:hover {
+    transform: translateY(-3px); border-color: rgba(255,122,26,.48);
+    box-shadow: 0 16px 34px rgba(0,0,0,.24);
+  }
+  .product-edit-link:hover {
+    color: #ffd0ad; border-color: #ff7a1a; background: rgba(255,107,0,.2);
+  }
+  .product-edit-link:hover .product-edit-arrow { transform: translateX(2px); }
+}
+@media (max-width: 560px) {
+  .products-grid { gap: 14px; }
+  .product-card { border-radius: 17px; }
+  .product-thumb { height: 220px; }
+  .product-info { padding: 16px; }
+  .product-edit-link { min-height: 50px; font-size: .92rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .product-card, .product-edit-link, .product-edit-arrow { transition: none; }
+}
+</style>
+
 <script>
 (function () {
   document.querySelectorAll('[data-gallery].has-gallery').forEach(function (gallery) {

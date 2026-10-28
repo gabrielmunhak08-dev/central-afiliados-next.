@@ -24,6 +24,7 @@
       <span class="brand-copy"><strong>Central<span class="brand-accent">.</span></strong><small>AFILIADOS</small></span>
     </a>
     {% if g.user %}
+    <button class="mobile-menu-button" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-drawer"><span aria-hidden="true">☰</span><span>Menu</span></button>
     <nav class="top-nav" aria-label="Navegação principal">
       <a href="{{ url_for('dashboard') }}" class="top-nav-link">Visão geral</a>
       <a href="{{ url_for('products') }}" class="top-nav-link">Produtos</a>
@@ -52,6 +53,26 @@
       <span class="user-pill"><span class="user-dot"></span>{{ g.user['username'] }}</span>
       <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button class="logout-button" type="submit">Sair</button></form>
     </div>
+    <div class="drawer-backdrop" data-close-drawer></div>
+    <aside class="mobile-drawer" id="mobile-drawer" aria-label="Menu principal" aria-hidden="true">
+      <div class="drawer-heading"><span class="drawer-brand">Central<span>.</span> Afiliados</span><button class="drawer-close" type="button" aria-label="Fechar menu" data-close-drawer>×</button></div>
+      <nav class="drawer-links" aria-label="Navegação móvel">
+        <a href="{{ url_for('dashboard') }}"><span class="drawer-icon">⌂</span>Visão geral</a>
+        <a href="{{ url_for('products') }}"><span class="drawer-icon">▦</span>Produtos</a>
+        <a href="{{ url_for('content') }}"><span class="drawer-icon">✦</span>Marketing</a>
+        <a href="{{ url_for('calendar') }}"><span class="drawer-icon">▣</span>Calendário</a>
+      </nav>
+      <div class="drawer-footer">
+        <details class="drawer-appearance"><summary><span class="drawer-icon">⚙</span>Aparência</summary>
+          <div class="drawer-appearance-options">
+            <button type="button" data-set-theme="dark">Tema escuro</button><button type="button" data-set-theme="light">Tema claro</button>
+            <label for="drawer-font-choice">Fonte</label><select id="drawer-font-choice" class="font-choice"><option value="system">Padrão</option><option value="modern">Moderna</option><option value="readable">Leitura fácil</option></select>
+          </div>
+        </details>
+        <div class="drawer-user"><span class="user-dot"></span><span>{{ g.user['username'] }}</span></div>
+        <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button class="drawer-logout" type="submit">↪ &nbsp; Sair da conta</button></form>
+      </div>
+    </aside>
     {% else %}
     <span class="version">ACESSO PRIVADO</span>
     {% endif %}
@@ -89,6 +110,38 @@
       }
       setTheme(root.dataset.theme || 'dark');
       setFont(root.dataset.font || 'system');
+      var drawer = document.getElementById('mobile-drawer');
+      var menuButton = document.querySelector('.mobile-menu-button');
+      var drawerFont = document.getElementById('drawer-font-choice');
+      function closeDrawer() {
+        if (!drawer) return;
+        drawer.classList.remove('is-open');
+        document.body.classList.remove('drawer-open');
+        drawer.setAttribute('aria-hidden', 'true');
+        if (menuButton) menuButton.setAttribute('aria-expanded', 'false');
+      }
+      if (drawer && menuButton) {
+        menuButton.addEventListener('click', function () {
+          drawer.classList.add('is-open');
+          document.body.classList.add('drawer-open');
+          drawer.setAttribute('aria-hidden', 'false');
+          menuButton.setAttribute('aria-expanded', 'true');
+        });
+        document.querySelectorAll('[data-close-drawer]').forEach(function (el) { el.addEventListener('click', closeDrawer); });
+        drawer.querySelectorAll('.drawer-links a').forEach(function (link) {
+          if (link.pathname === window.location.pathname) link.classList.add('active');
+          link.addEventListener('click', closeDrawer);
+        });
+        document.addEventListener('keydown', function (event) { if (event.key === 'Escape') closeDrawer(); });
+      }
+      if (drawerFont) {
+        try { drawerFont.value = localStorage.getItem('central-font') || 'system'; } catch (e) {}
+        drawerFont.addEventListener('change', function () {
+          setFont(drawerFont.value);
+          var desktopFont = document.getElementById('font-choice');
+          if (desktopFont) desktopFont.value = drawerFont.value;
+        });
+      }
       document.addEventListener('click', function (event) {
         var menu = document.querySelector('.appearance-menu');
         if (menu && !menu.contains(event.target)) menu.removeAttribute('open');

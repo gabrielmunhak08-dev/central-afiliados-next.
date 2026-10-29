@@ -2,7 +2,7 @@
 
 ## Estado desta etapa
 
-Esta branch adiciona apenas a camada de comunicação GraphQL assinada e testes unitários. Ainda não conecta a API às telas de Produtos e não altera o banco de dados.
+Esta branch adiciona a camada de comunicação GraphQL assinada, uma função de pesquisa `productOfferV2` e testes unitários. Ainda não conecta a API às telas de Produtos e não altera o banco de dados.
 
 ## Credenciais
 
@@ -35,7 +35,8 @@ O cliente não registra credenciais e substitui erros de transporte por mensagen
 2. Configurar as duas variáveis de ambiente localmente, sem as enviar no chat.
 3. Fazer um teste controlado com uma consulta simples confirmada no explorador oficial.
 4. Adicionar uma página privada de configuração/status e uma ação de teste na Central.
-5. Implementar busca de ofertas e geração de links curtos apenas após confirmar os campos GraphQL aceitos pela API brasileira.
+5. Conectar a função de busca à tela de pesquisa de produtos, mantendo a seleção/cadastro manual até o usuário confirmar cada item.
+6. Implementar geração de links curtos depois de confirmar os campos da mutation no Explorer brasileiro.
 
 ## Testes
 

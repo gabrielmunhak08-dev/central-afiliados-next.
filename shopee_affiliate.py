@@ -10,6 +10,14 @@ import time
 import urllib.error
 import urllib.request
 
+# Permite executar a integração localmente com um arquivo .env ignorado pelo Git.
+try:
+    from dotenv import load_dotenv
+    from pathlib import Path
+    load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
+except ImportError:
+    pass
+
 
 SHOPEE_AFFILIATE_ENDPOINT = "https://open-api.affiliate.shopee.com.br/graphql"
 

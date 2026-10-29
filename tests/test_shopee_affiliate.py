@@ -9,6 +9,7 @@ from shopee_affiliate import (
     ShopeeAPIError,
     ShopeeAffiliateClient,
     build_authorization,
+    search_product_offers,
 )
 
 
@@ -68,3 +69,47 @@ def test_graphql_errors_are_reported_without_echoing_secret():
             client.request("{ test }")
     assert "10020" in str(exc.value)
     assert "secret-that-must-not-leak" not in str(exc.value)
+
+
+
+def test_product_offer_search_uses_keyword_and_requested_pagination():
+    class FakeClient:
+        def __init__(self):
+            self.call = None
+
+        def request(self, query, variables=None, operation_name=None):
+            self.call = (query, variables, operation_name)
+            return {"productOfferV2": {"nodes": [{"itemId": "123"}], "pageInfo": {"hasNextPage": True}}}
+
+    client = FakeClient()
+    result = search_product_offers(client, "tênis de corrida", page=2, limit=15, sort_type=5)
+
+    assert result["nodes"][0]["itemId"] == "123"
+    query, variables, operation_name = client.call
+    assert "productOfferV2" in query
+    assert "productName" in query
+    assert "offerLink" in query
+    assert variables == {
+        "keyword": "tênis de corrida",
+        "sortType": 5,
+        "page": 2,
+        "limit": 15,
+    }
+    assert operation_name == "ProductOfferV2"
+
+
+@pytest.mark.parametrize("kwargs", [
+    {"keyword": ""},
+    {"keyword": "fone", "page": 0},
+    {"keyword": "fone", "limit": 0},
+    {"keyword": "fone", "limit": 51},
+    {"keyword": "fone", "sort_type": 6},
+])
+def test_product_offer_search_validates_input(kwargs):
+    class FakeClient:
+        def request(self, *args, **kwargs):
+            pytest.fail("A API não deve ser chamada para entrada inválida.")
+
+    keyword = kwargs.pop("keyword", "fone")
+    with pytest.raises(ShopeeAPIError):
+        search_product_offers(FakeClient(), keyword, **kwargs)

@@ -458,6 +458,42 @@ def create_app(test_config=None):
         return send_from_directory(upload_dir, filename)
     allowed_extensions = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 
+    @app.route("/produtos/buscar-shopee", methods=["GET", "POST"])
+    @login_required
+    def shopee_product_search():
+        from shopee_affiliate import ShopeeAPIError, ShopeeAffiliateClient, search_product_offers
+
+        keyword = request.form.get("keyword", "").strip() if request.method == "POST" else request.args.get("q", "").strip()
+        offers = []
+        page_info = {}
+        searched = False
+        if request.method == "POST" and keyword:
+            searched = True
+            try:
+                result = search_product_offers(
+                    ShopeeAffiliateClient(),
+                    keyword=keyword,
+                    page=1,
+                    limit=10,
+                    sort_type=5,
+                )
+                offers = result.get("nodes") or []
+                page_info = result.get("pageInfo") or {}
+                if not offers:
+                    flash("A Shopee não retornou produtos para essa busca. Tente outra palavra-chave.", "info")
+            except ShopeeAPIError as exc:
+                flash(str(exc), "error")
+        elif request.method == "POST":
+            flash("Digite o nome de um produto para pesquisar.", "error")
+
+        return render_template(
+            "shopee_search.html",
+            keyword=keyword,
+            offers=offers,
+            page_info=page_info,
+            searched=searched,
+        )
+
     @app.get("/produtos")
     @login_required
     def products():

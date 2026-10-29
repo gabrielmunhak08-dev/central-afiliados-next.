@@ -6,7 +6,14 @@ Esta branch adiciona a camada de comunicação GraphQL assinada, uma função de
 
 ## Credenciais
 
-Configure as variáveis de ambiente no ambiente em que a Central será executada:
+Configure as variáveis de ambiente no ambiente em que a Central será executada. A aplicação também carrega um arquivo local `.env` na pasta do projeto (esse arquivo está ignorado pelo Git):
+
+1. Copie `.env.example` para `.env`.
+2. Preencha `SHOPEE_APP_ID` e `SHOPEE_APP_SECRET` apenas no arquivo local `.env` ou no ambiente do servidor.
+3. Reinicie a aplicação para carregar as configurações.
+
+Não envie o arquivo `.env` ao GitHub.
+
 
 - `SHOPEE_APP_ID`: AppID mostrado na página Open API da Shopee.
 - `SHOPEE_APP_SECRET`: senha/secret da API gerada pela Shopee — não é a senha de login da conta.

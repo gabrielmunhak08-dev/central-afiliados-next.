@@ -101,3 +101,78 @@ class ShopeeAffiliateClient:
         if "data" not in result:
             raise ShopeeAPIError("A resposta da API da Shopee não contém dados.")
         return result["data"]
+
+
+
+PRODUCT_OFFER_QUERY = """
+query ProductOfferV2($keyword: String, $sortType: Int, $page: Int, $limit: Int) {
+  productOfferV2(
+    keyword: $keyword,
+    sortType: $sortType,
+    page: $page,
+    limit: $limit
+  ) {
+    nodes {
+      itemId
+      commissionRate
+      appExistRate
+      appNewRate
+      webExistRate
+      webNewRate
+      commission
+      price
+      sales
+      imageUrl
+      productName
+      shopName
+      productLink
+      offerLink
+      periodEndTime
+      periodStartTime
+      priceMin
+      priceMax
+      productCatIds
+      ratingStar
+      priceDiscountRate
+      shopId
+      shopType
+      sellerCommissionRate
+      shopeeCommissionRate
+    }
+    pageInfo {
+      page
+      limit
+      hasNextPage
+      scrollId
+    }
+  }
+}
+"""
+
+
+def search_product_offers(client, keyword, page=1, limit=20, sort_type=5):
+    """Pesquisa ofertas de produtos; não salva nada no banco automaticamente."""
+    keyword = str(keyword or "").strip()
+    if not keyword:
+        raise ShopeeAPIError("Informe uma palavra-chave para pesquisar produtos.")
+    if not isinstance(page, int) or isinstance(page, bool) or page < 1:
+        raise ShopeeAPIError("A página deve ser um número inteiro maior que zero.")
+    if not isinstance(limit, int) or isinstance(limit, bool) or not 1 <= limit <= 50:
+        raise ShopeeAPIError("O limite deve ser um número inteiro entre 1 e 50.")
+    if sort_type not in (1, 2, 3, 4, 5):
+        raise ShopeeAPIError("A ordenação deve estar entre 1 e 5.")
+
+    data = client.request(
+        PRODUCT_OFFER_QUERY,
+        variables={
+            "keyword": keyword,
+            "sortType": sort_type,
+            "page": page,
+            "limit": limit,
+        },
+        operation_name="ProductOfferV2",
+    )
+    offers = data.get("productOfferV2") if isinstance(data, dict) else None
+    if not isinstance(offers, dict):
+        raise ShopeeAPIError("A resposta não contém a lista de ofertas de produtos.")
+    return offers

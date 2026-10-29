@@ -2,7 +2,7 @@
 
 ## Estado desta etapa
 
-Esta branch adiciona a camada de comunicação GraphQL assinada, uma função de pesquisa `productOfferV2` e testes unitários. Ainda não conecta a API às telas de Produtos e não altera o banco de dados.
+Esta branch adiciona a camada de comunicação GraphQL assinada, uma função de pesquisa `productOfferV2`, uma tela privada em `/produtos/buscar-shopee` e testes unitários. A tela mostra resultados e links, mas não grava produtos no catálogo. Nenhuma alteração no esquema do banco foi feita.
 
 ## Credenciais
 

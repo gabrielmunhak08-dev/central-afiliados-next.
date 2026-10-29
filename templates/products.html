@@ -4,7 +4,7 @@
 <div class="content-nav-row"><button class="back-button" type="button" onclick="if (history.length > 1) history.back(); else location.href='{{ url_for('dashboard') }}'">← Voltar</button><a class="home-content-link" href="{{ url_for('dashboard') }}">Central principal</a></div>
 <section class="section-heading product-heading">
   <div><p class="eyebrow">CATÁLOGO</p><h1>Seus <span class="accent">produtos.</span></h1><p class="muted">Organize preços, links e fotos em um só lugar.</p></div>
-  <a class="button" href="{{ url_for('product_form') }}">+ Novo produto</a>
+  <div class="product-heading-actions"><a class="secondary-button" href="{{ url_for('shopee_product_search') }}">⌕ Buscar na Shopee</a><a class="button" href="{{ url_for('product_form') }}">+ Novo produto</a></div>
 </section>
 <form class="search-bar" method="get"><input name="q" value="{{ q }}" placeholder="Buscar por nome ou categoria"><button class="button" type="submit">Buscar</button></form>
 {% if products %}
@@ -41,6 +41,9 @@
 
 <style>
 /* Refinamento localizado do catálogo: não altera as demais telas. */
+.product-heading-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.product-heading-actions .secondary-button { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:10px 14px; border:1px solid #3b4655; border-radius:12px; color:var(--text); text-decoration:none; font-weight:750; background:rgba(255,255,255,.025); }
+@media(max-width:560px) { .product-heading-actions { width:100%; } .product-heading-actions > a { flex:1; text-align:center; } }
 .products-grid { gap: 18px; }
 .product-card {
   display: flex; flex-direction: column; min-width: 0;

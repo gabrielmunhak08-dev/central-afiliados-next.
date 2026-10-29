@@ -174,3 +174,96 @@ def test_catalog_accepts_multiple_product_photos(tmp_path):
         assert extra_count == 2
     finally:
         conn.close()
+
+
+
+def login_first_user(client):
+    token = csrf(client, "/configurar")
+    client.post("/configurar", data={
+        "_csrf_token": token,
+        "username": "gabriel",
+        "password": "senha-forte-de-teste-123",
+        "confirmation": "senha-forte-de-teste-123",
+    })
+
+
+def test_shopee_search_page_requires_login(tmp_path):
+    app = make_app(tmp_path)
+    response = app.test_client().get("/produtos/buscar-shopee")
+    assert response.status_code == 302
+    assert "/login" in response.headers["Location"]
+
+
+def test_shopee_search_page_renders_without_credentials_and_does_not_save_products(tmp_path, monkeypatch):
+    from shopee_affiliate import ShopeeAffiliateClient, ShopeeAPIError
+
+    app = make_app(tmp_path)
+    client = app.test_client()
+    login_first_user(client)
+    monkeypatch.setattr(
+        ShopeeAffiliateClient,
+        "request",
+        lambda *args, **kwargs: (_ for _ in ()).throw(ShopeeAPIError("API não configurada para teste")),
+    )
+    token = csrf(client, "/produtos/buscar-shopee")
+    response = client.post(
+        "/produtos/buscar-shopee",
+        data={"_csrf_token": token, "keyword": "tênis de corrida"},
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
+    assert "tênis de corrida" in response.get_data(as_text=True)
+    assert "API não configurada para teste" in response.get_data(as_text=True)
+    import sqlite3
+    conn = sqlite3.connect(app.config["DATABASE"])
+    try:
+        assert conn.execute("SELECT COUNT(*) FROM products").fetchone()[0] == 0
+    finally:
+        conn.close()
+
+
+def test_shopee_search_page_renders_mocked_offers_without_saving(tmp_path, monkeypatch):
+    from shopee_affiliate import ShopeeAffiliateClient
+
+    app = make_app(tmp_path)
+    client = app.test_client()
+    login_first_user(client)
+    monkeypatch.setattr(
+        ShopeeAffiliateClient,
+        "request",
+        lambda *args, **kwargs: {
+            "productOfferV2": {
+                "nodes": [{
+                    "itemId": "12345",
+                    "productName": "Tênis de teste",
+                    "shopName": "Loja teste",
+                    "price": 119.8,
+                    "imageUrl": "https://example.com/tenis.jpg",
+                    "offerLink": "https://example.com/oferta",
+                    "productLink": "https://example.com/produto",
+                    "commissionRate": "8%",
+                    "sales": 10,
+                    "ratingStar": 4.8,
+                    "priceDiscountRate": 15,
+                }],
+                "pageInfo": {"page": 1, "limit": 10, "hasNextPage": False},
+            }
+        },
+    )
+    token = csrf(client, "/produtos/buscar-shopee")
+    response = client.post(
+        "/produtos/buscar-shopee",
+        data={"_csrf_token": token, "keyword": "tênis"},
+        follow_redirects=True,
+    )
+    html = response.get_data(as_text=True)
+    assert response.status_code == 200
+    assert "Tênis de teste" in html
+    assert "119,80" in html
+    assert "Abrir link de oferta" in html
+    import sqlite3
+    conn = sqlite3.connect(app.config["DATABASE"])
+    try:
+        assert conn.execute("SELECT COUNT(*) FROM products").fetchone()[0] == 0
+    finally:
+        conn.close()

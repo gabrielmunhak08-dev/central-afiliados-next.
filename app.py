@@ -16,6 +16,13 @@ from flask import (
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
+# Carrega configurações locais de .env quando existir; variáveis já exportadas têm prioridade.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
+except ImportError:
+    pass
+
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
